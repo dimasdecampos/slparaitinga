@@ -14,12 +14,13 @@ const CORES = { praca: '#2f6b4f', igreja: '#c8452c', cultura: '#b98900', servico
 const TIPOS = { praca: 'Praça e natureza', igreja: 'Igreja', cultura: 'Cultura', servico: 'Serviço' };
 const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// A agenda (rede) carrega em paralelo com o mapa e não segura o desenho dele.
+const apiPronta = criarBackend().catch(e => (console.warn('[home] agenda indisponível', e), null));
 const [pontos, svgTexto] = await Promise.all([
   fetch('data/pontos.json').then(r => r.json()).catch(() => []),
   fetch('mapa.svg').then(r => r.text()).catch(() => null),
 ]);
-const api = await criarBackend().catch(e => (console.warn('[home] agenda indisponível', e), null));
-const demo = api?.modo === 'demo';
+let api = null, demo = false;
 
 let eventos = [], registros = [], vivos = [];
 function lugarDe(ev) {
@@ -30,8 +31,8 @@ const vivosEm = p => vivos.filter(e => lugarDe(e) === p);
 
 const pedido = new URLSearchParams(location.search).get('lugar');
 const mapa = svgTexto ? montarMapa() : null;
-await atualizar(true);
-setInterval(() => atualizar(false), 60_000);
+apiPronta.then(a => { api = a; demo = a?.modo === 'demo'; return atualizar(true); });
+setInterval(() => { if (!document.hidden) atualizar(false); }, 60_000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) atualizar(false); });
 
 if (pedido && mapa) { const p = pontos.find(x => x.slug === pedido); if (p) { mapa.focar(p.x, p.y, 520); mapa.abrirInfo(p); $('#mapa').scrollIntoView({ block: 'start' }); } }
@@ -40,12 +41,15 @@ async function atualizar(primeira) {
   if (api) {
     try {
       eventos = await api.listarEventos(new Date(Date.now() - 864e5), new Date(Date.now() + 30 * 864e5));
-      registros = await api.listarRegistros(eventos.filter(e => janelaAberta(e)).map(e => e.id));
     } catch (e) { console.warn('[home] erro ao carregar a agenda', e); }
   }
   vivos = eventos.filter(e => acontecendo(e));
   renderPainel(); renderProximos();
   if (mapa) { mapa.marcarVivos(); if (primeira && !pedido) mapa.vistaInicial(false); }
+  // As fotos só aparecem ao abrir um lugar: carregam depois, sem atrasar o resto.
+  if (api) {
+    try { registros = await api.listarRegistros(eventos.filter(e => janelaAberta(e)).map(e => e.id)); } catch (e) { console.warn('[home] erro ao carregar as fotos', e); }
+  }
 }
 
 function renderPainel() {

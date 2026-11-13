@@ -55,7 +55,7 @@ function layout(p) {
   const rel = u => /^([a-z]+:|#|\/)/i.test(u) ? u : sobe + (u === './' ? '' : u);
   return html.replace(/(href|src)="([^"]*)"/g, (_, a, u) => a + '="' + rel(u) + '"').replace(/url\((img\/[^)]*)\)/g, (_, u) => 'url(' + sobe + u + ')');
 }
-function layoutBase({ arquivo, titulo, descricao, corpo, scripts = '', css = '', jsonld = [], migalha }) {
+function layoutBase({ arquivo, titulo, descricao, corpo, scripts = '', css = '', jsonld = [], migalha, dicas = "" }) {
   const canon = URL_SITE ? `${URL_SITE}/${arquivo === 'index.html' ? '' : arquivo}` : '';
   const tituloCompleto = arquivo === 'index.html' ? titulo : `${titulo} · São Luiz do Paraitinga`;
   const ld = [...jsonld];
@@ -79,8 +79,10 @@ ${canon ? `<meta property="og:url" content="${canon}">\n<meta property="og:image
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="site.css">
+${dicas}
 ${css}
 ${ld.map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n')}
 </head>
@@ -124,6 +126,9 @@ const avisoHTML = n => `<li><a href="${esc(n.link)}" target="_blank" rel="noopen
 
 // ---------- páginas ----------
 const paginas = [];
+// Dicas de carregamento: a agenda fala com o Supabase, então já abrimos a conexão e baixamos o módulo cedo.
+const SUPABASE = (fs.readFileSync(aqui('./config.js'), 'utf8').match(/supabaseUrl:\s*'([^']+)'/) || [])[1];
+const dicasAgenda = (extra = '') => (SUPABASE ? `<link rel="preconnect" href="${SUPABASE}" crossorigin>` : '') + '<link rel="modulepreload" href="backend.js">' + extra;
 
 paginas.push({
   arquivo: 'index.html',
@@ -133,6 +138,7 @@ paginas.push({
     { '@context': 'https://schema.org', '@type': 'WebSite', name: cfg.nome, inLanguage: 'pt-BR', description: cfg.descricao, ...(URL_SITE ? { url: URL_SITE + '/' } : {}) },
     { '@context': 'https://schema.org', '@type': 'City', name: 'São Luiz do Paraitinga', containedInPlace: { '@type': 'State', name: 'São Paulo' }, geo: { '@type': 'GeoCoordinates', latitude: -23.2219, longitude: -45.3104 } },
   ],
+  dicas: dicasAgenda('<link rel="modulepreload" href="home.js"><link rel="preload" href="data/pontos.json" as="fetch" crossorigin><link rel="preload" href="mapa.svg" as="fetch" crossorigin>'),
   scripts: '<script src="config.js"></script>\n<script type="module" src="home.js"></script>',
   corpo: `<section class="hero larg" aria-labelledby="titulo">
   <div class="hero-grade">
@@ -179,6 +185,7 @@ paginas.push({
   titulo: 'Agenda da cidade: eventos ao vivo',
   descricao: 'Agenda colaborativa de São Luiz do Paraitinga. Moradores adicionam eventos, confirmam o que está acontecendo agora e enviam fotos.',
   css: '<link rel="stylesheet" href="agenda.css">',
+  dicas: dicasAgenda('<link rel="modulepreload" href="agenda.js">'),
   scripts: '<script src="config.js"></script>\n<script type="module" src="agenda.js"></script>',
   corpo: `${cabecalhoPagina('Agenda colaborativa', 'Agenda da cidade', 'Feita por quem mora aqui: adicione eventos, confirme o que está acontecendo e mande uma foto.')}
 <div class="larg agenda-conta"><span id="conta" class="conta"></span></div>

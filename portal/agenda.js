@@ -81,6 +81,7 @@ function abrirEntrar(depois) {
     : api.precisaEmail
       ? 'Enviamos um link de acesso para o seu e-mail. Não precisa criar senha.'
       : 'Na demonstração basta um nome. Com o banco ligado, o acesso será por um link enviado ao e-mail.';
+  api.preparar?.(); // baixa o módulo de login enquanto a pessoa escolhe
   $('#dlg-entrar').showModal();
 }
 $('#entrar-google').addEventListener('click', async e => {
@@ -111,6 +112,7 @@ async function carregar() {
     if (gIni < de) de = gIni;
     if (gFim > ate) ate = gFim;
     eventos = await api.listarEventos(de, ate);
+    render();                                   // o calendário aparece sem esperar as fotos
     const vivos = eventos.filter(e => janelaAberta(e));
     registros = await api.listarRegistros(vivos.map(e => e.id));
     render();
@@ -345,6 +347,6 @@ $('#form-foto').addEventListener('submit', async e => {
 renderConta();
 await carregar();
 if (location.hash === '#novo') abrirNovoEvento();
-setInterval(carregar, 60_000);                       // atualiza confirmações e fotos
-setInterval(render, 30_000);                         // move eventos para "acontecendo agora" na hora certa
+setInterval(() => { if (!document.hidden) carregar(); }, 60_000);                      // atualiza confirmações e fotos
+setInterval(() => { if (!document.hidden) render(); }, 30_000);                        // move eventos para "acontecendo agora" na hora certa
 document.addEventListener('visibilitychange', () => { if (!document.hidden) carregar(); });

@@ -28,7 +28,48 @@ export async function criarBackend() {
 }
 
 // ======================= Supabase =======================
+// Visitante sem login (a maioria): lê a agenda direto pela API REST, sem baixar a biblioteca do Supabase
+// (~7 arquivos do CDN). A biblioteca só carrega quando existe uma sessão guardada, ou quando a pessoa tenta entrar.
 async function supabaseBackend(cfg) {
+  const ref = new URL(cfg.supabaseUrl).hostname.split('.')[0];
+  let guardada = false;
+  try { guardada = !!localStorage.getItem(`sb-${ref}-auth-token`); } catch { /* sem acesso ao armazenamento */ }
+  if (guardada || /access_token=|[?&]code=/.test(location.hash + location.search)) return supabaseCompleto(cfg);
+
+  let completo = null;
+  const pendentes = [];
+  const carregarCompleto = () => (completo ||= supabaseCompleto(cfg).then(b => { pendentes.forEach(f => b.aoMudarUsuario(f)); return b; }));
+  const delegar = nome => async (...a) => (await carregarCompleto())[nome](...a);
+  const rest = async caminho => {
+    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/${caminho}`, { headers: { apikey: cfg.supabaseKey } });
+    if (!r.ok) throw new Error('Não foi possível carregar a agenda.');
+    return r.json();
+  };
+  return {
+    modo: 'supabase',
+    usuario: () => null,
+    aoMudarUsuario: f => (completo ? completo.then(b => b.aoMudarUsuario(f)) : pendentes.push(f)),
+    precisaEmail: true,
+    google: true,
+    preparar: () => carregarCompleto().catch(() => {}),
+    entrarComGoogle: delegar('entrarComGoogle'),
+    entrar: delegar('entrar'),
+    sair: delegar('sair'),
+    criarEvento: delegar('criarEvento'),
+    confirmar: delegar('confirmar'),
+    encerrar: delegar('encerrar'),
+    enviarRegistro: delegar('enviarRegistro'),
+    denunciar: delegar('denunciar'),
+    listarEventos: (de, ate) => rest(`eventos_resumo?select=*&fim=gte.${encodeURIComponent(de.toISOString())}&inicio=lte.${encodeURIComponent(ate.toISOString())}&order=inicio&limit=300`),
+    async listarRegistros(ids) {
+      if (!ids.length) return [];
+      const lista = await rest(`registros_resumo?select=*&evento_id=in.(${ids.map(Number).join(',')})&order=criado_em.desc&limit=200`);
+      return lista.map(r => ({ ...r, foto_url: r.foto ? `${cfg.supabaseUrl}/storage/v1/object/public/fotos/${r.foto.split('/').map(encodeURIComponent).join('/')}` : null }));
+    },
+  };
+}
+
+async function supabaseCompleto(cfg) {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
   const sb = createClient(cfg.supabaseUrl, cfg.supabaseKey);
   let perfil = null;
@@ -39,7 +80,7 @@ async function supabaseBackend(cfg) {
     perfil = data || { id: session.user.id, nome: session.user.email.split('@')[0] };
   }
   await carregarPerfil((await sb.auth.getSession()).data.session);
-  sb.auth.onAuthStateChange((_e, session) => { setTimeout(async () => { await carregarPerfil(session); ouvintes.forEach(f => f(perfil)); }, 0); });
+  sb.auth.onAuthStateChange((_e, session) => { if ((session?.user?.id || null) === (perfil?.id || null)) return; setTimeout(async () => { await carregarPerfil(session); ouvintes.forEach(f => f(perfil)); }, 0); });
   const falhou = (error, msg) => { if (error) { console.error(error); throw new Error(traduzir(error) || msg); } };
   const urlFoto = p => p ? sb.storage.from('fotos').getPublicUrl(p).data.publicUrl : null;
 
@@ -62,17 +103,14 @@ async function supabaseBackend(cfg) {
     async listarEventos(de, ate) {
       const { data, error } = await sb.from('eventos_resumo').select('*').gte('fim', de.toISOString()).lte('inicio', ate.toISOString()).order('inicio').limit(300);
       falhou(error, 'Não foi possível carregar a agenda.');
-      let meus = new Set();
-      if (perfil && data.length) {
-        const r = await sb.from('confirmacoes').select('evento_id').eq('usuario_id', perfil.id).in('evento_id', data.map(e => e.id));
-        meus = new Set((r.data || []).map(x => x.evento_id));
-      }
-      let meusFim = new Set();
-      if (perfil && data.length) {
-        const r = await sb.from('encerramentos').select('evento_id').eq('usuario_id', perfil.id).in('evento_id', data.map(e => e.id));
-        meusFim = new Set((r.data || []).map(x => x.evento_id));
-      }
-      return data.map(e => ({ ...e, eu_confirmei: meus.has(e.id), eu_encerrei: meusFim.has(e.id) }));
+      const ids = data.map(e => e.id);
+      const meus = async tabela => {
+        if (!perfil || !ids.length) return new Set();
+        const r = await sb.from(tabela).select('evento_id').eq('usuario_id', perfil.id).in('evento_id', ids);
+        return new Set((r.data || []).map(x => x.evento_id));
+      };
+      const [minhas, meusFim] = await Promise.all([meus('confirmacoes'), meus('encerramentos')]);
+      return data.map(e => ({ ...e, eu_confirmei: minhas.has(e.id), eu_encerrei: meusFim.has(e.id) }));
     },
     async criarEvento(ev) {
       const { error } = await sb.from('eventos').insert(ev);
