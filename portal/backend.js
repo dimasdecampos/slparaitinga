@@ -60,6 +60,9 @@ async function supabaseBackend(cfg) {
     encerrar: delegar('encerrar'),
     enviarRegistro: delegar('enviarRegistro'),
     denunciar: delegar('denunciar'),
+    enviarRecado: delegar('enviarRecado'),
+    apagarRecado: delegar('apagarRecado'),
+    listarRecados: ids => (ids.length ? rest(`recados_resumo?select=*&evento_id=in.(${ids.map(Number).join(',')})&order=criado_em&limit=500`) : Promise.resolve([])),
     listarEventos: (de, ate) => rest(`eventos_resumo?select=*&fim=gte.${encodeURIComponent(de.toISOString())}&inicio=lte.${encodeURIComponent(ate.toISOString())}&order=inicio&limit=300`),
     async listarRegistros(ids) {
       if (!ids.length) return [];
@@ -148,6 +151,21 @@ async function supabaseCompleto(cfg) {
       if (error?.code === '23505') return;
       falhou(error, 'Não foi possível enviar a denúncia.');
     },
+    async listarRecados(ids) {
+      if (!ids.length) return [];
+      const { data, error } = await sb.from('recados_resumo').select('*').in('evento_id', ids).order('criado_em').limit(500);
+      falhou(error, 'Não foi possível carregar os recados.');
+      return data;
+    },
+    async enviarRecado(eventoId, texto) {
+      const { data, error } = await sb.from('recados').insert({ evento_id: eventoId, texto }).select('id, evento_id, usuario_id, texto, criado_em').single();
+      falhou(error, 'Não foi possível enviar o recado.');
+      return { ...data, autor: perfil?.nome };
+    },
+    async apagarRecado(id) {
+      const { error } = await sb.from('recados').delete().eq('id', id);
+      falhou(error, 'Não foi possível apagar o recado.');
+    },
   };
 }
 
@@ -221,6 +239,17 @@ function demoBackend() {
       db.registros.push(r); gravar(db);
     },
     async denunciar() {},
+    async listarRecados(ids) {
+      return (db.recados || []).filter(m => ids.includes(m.evento_id)).sort((a, b) => a.criado_em.localeCompare(b.criado_em));
+    },
+    async enviarRecado(eventoId, texto) {
+      const ev = db.eventos.find(e => e.id === eventoId);
+      if (!eu()) throw new Error('Entre para escrever um recado.');
+      if (!ev || !janelaAberta(ev)) throw new Error('O mural só aceita recados enquanto o evento está acontecendo.');
+      const m = { id: Date.now(), evento_id: eventoId, usuario_id: eu().id, autor: eu().nome, texto, criado_em: new Date().toISOString() };
+      (db.recados = db.recados || []).push(m); gravar(db); return m;
+    },
+    async apagarRecado(id) { db.recados = (db.recados || []).filter(m => !(m.id === id && m.usuario_id === eu()?.id)); gravar(db); },
   };
 }
 
@@ -244,7 +273,12 @@ function semear() {
     { id: 101, evento_id: 1, usuario_id: 'u-ze', autor: 'Zé do Bloco (exemplo)', legenda: 'Dança de fitas acontecendo agora na praça! Tá lindo demais', criado_em: rel(-12), foto_demo: fotoDemo('#b5552f', '#f2c14e', '#2f6f8a') },
     { id: 102, evento_id: 1, usuario_id: 'u-par', autor: 'Paróquia (exemplo)', legenda: 'Praça cheia, ainda dá tempo de chegar', criado_em: rel(-5) },
   ];
-  return { versao: 1, sessao: null, eventos, confirmacoes, registros };
+  const recados = [
+    { id: 201, evento_id: 1, usuario_id: 'u-ze', autor: 'Zé do Bloco (exemplo)', texto: 'Começou! Tem lugar na sombra perto do coreto.', criado_em: rel(-20) },
+    { id: 202, evento_id: 1, usuario_id: 'u-ana', autor: 'Ana (exemplo)', texto: 'Alguém sabe se vai ter apresentação de novo à tarde?', criado_em: rel(-9) },
+    { id: 203, evento_id: 1, usuario_id: 'u-par', autor: 'Paróquia (exemplo)', texto: 'Vai sim, às 16h, depois da missa.', criado_em: rel(-6) },
+  ];
+  return { versao: 1, sessao: null, eventos, confirmacoes, registros, recados };
 }
 
 function fotoDemo(...cores) { // ilustração simples de fitas coloridas para a demonstração

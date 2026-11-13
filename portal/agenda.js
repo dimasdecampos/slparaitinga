@@ -115,11 +115,29 @@ async function carregar() {
     if (gFim > ate) ate = gFim;
     eventos = await api.listarEventos(de, ate);
     render();                                   // o calendário aparece sem esperar as fotos
-    const vivos = eventos.filter(e => janelaAberta(e));
-    registros = (await api.listarRegistros(vivos.map(e => e.id))).filter(r => chave(new Date(r.criado_em)) === chave(new Date())); // as fotos duram só o dia
+    const ids = eventos.filter(e => janelaAberta(e)).map(e => e.id);
+    const [regs] = await Promise.all([api.listarRegistros(ids), buscarRecados(ids)]);
+    registros = regs.filter(r => deHoje(r.criado_em)); // as fotos duram só o dia
     render();
   } catch (err) { console.error(err); toast(err.message || 'Erro ao carregar a agenda.'); }
 }
+const deHoje = iso => chave(new Date(iso)) === chave(new Date());
+
+// Mural de recados: só dos eventos na janela; se a tabela ainda não existe, o mural some sem quebrar a página.
+let recados = [], muralDisponivel = true;
+async function buscarRecados(ids) {
+  try { recados = (await api.listarRecados(ids)).filter(m => deHoje(m.criado_em)); muralDisponivel = true; }
+  catch (err) { console.warn('[agenda] mural indisponível', err); recados = []; muralDisponivel = false; }
+}
+// Enquanto alguém está na página, o mural atualiza mais rápido que o resto (conversa ao vivo).
+setInterval(async () => {
+  if (document.hidden || !muralDisponivel) return;
+  const ids = [...document.querySelectorAll('#agora [data-id]')].map(a => Number(a.dataset.id));
+  if (!ids.length) return;
+  const antes = recados.map(m => m.id).join();
+  await buscarRecados(ids);
+  if (recados.map(m => m.id).join() !== antes) render();
+}, 15_000);
 
 // ---------- renderização ----------
 function render() {
@@ -128,31 +146,45 @@ function render() {
   const vivosIds = new Set(vivos.map(e => e.id));
   const u = api.usuario();
 
+  const estado = guardarEstadoMural();
   $('#agora').innerHTML = vivos.length ? vivos.map(e => {
     const regs = registros.filter(r => r.evento_id === e.id);
-    const encerrado = agora > new Date(e.fim);
-    const conf = e.confirmacoes > 0
-      ? `<span class="selo-conf">✔ ${e.confirmacoes} ${e.confirmacoes === 1 ? 'pessoa confirmou' : 'pessoas confirmaram'}</span><span class="meta">última confirmação ${haQuanto(e.ultima_confirmacao)}</span>`
-      : `<span class="selo-conf zero">Ninguém confirmou ainda. Você está lá?</span>`;
-    return `<article class="vivo" data-id="${e.id}">
-      <span class="selo">${esc(e.categoria)}${encerrado ? ' · terminou agora há pouco' : ''}</span>
-      <h3>${esc(e.titulo)}</h3>
-      <div class="onde">📍 ${esc(e.local)} · ${diaTodo(e) ? 'dia todo' : `${hora(e.inicio)}–${hora(e.fim)}`}</div>
-      ${e.descricao ? `<p class="desc">${esc(e.descricao)}</p>` : ''}
-      <div class="termometro">${conf}</div>
-      ${galeriaHTML(e.id, regs, u)}
-      <div class="acoes-vivo">
-        ${e.eu_confirmei
-          ? `<button type="button" class="botao-primario ja" disabled>✔ Você confirmou</button>`
-          : `<button type="button" class="botao-primario" data-acao="confirmar">✋ Está acontecendo</button>`}
-        <button type="button" class="botao-sec" data-acao="foto">📷 Enviar foto</button>
-        ${e.eu_encerrei
-          ? `<button type="button" class="botao-sec" disabled>🏁 Você avisou que terminou</button>`
-          : `<button type="button" class="botao-sec" data-acao="encerrar">🏁 Já terminou</button>`}
+    // legendas enviadas sem foto também são conversa: entram no mural, em ordem de horário
+    const msgs = recados.filter(m => m.evento_id === e.id).map(m => ({ ...m, tipo: 'recado' }))
+      .concat(regs.filter(r => !r.foto_url).map(r => ({ ...r, texto: r.legenda, tipo: 'registro' })))
+      .sort((a, b) => a.criado_em.localeCompare(b.criado_em));
+    const nFotos = regs.filter(r => r.foto_url).length;
+    const terminou = agora > new Date(e.fim);
+    const prova = [
+      e.confirmacoes > 0 ? `<b>${e.confirmacoes}</b> ${e.confirmacoes === 1 ? 'pessoa está lá' : 'pessoas estão lá'}` : 'Ninguém confirmou ainda',
+      nFotos ? `${nFotos} ${nFotos === 1 ? 'foto' : 'fotos'}` : '',
+      msgs.length ? `${msgs.length} ${msgs.length === 1 ? 'recado' : 'recados'}` : '',
+    ].filter(Boolean).join(' · ');
+    return `<article class="vivo" data-id="${e.id}" aria-labelledby="vivo-t-${e.id}">
+      <div class="vivo-cab">
+        <div class="vivo-info">
+          <div class="vivo-selos">${terminou ? '<span class="pill-fim">Terminou há pouco</span>' : '<span class="pill-vivo"><span class="ponto"></span>Ao vivo</span>'}<span class="selo">${esc(e.categoria)}</span></div>
+          <h3 id="vivo-t-${e.id}">${esc(e.titulo)}</h3>
+          <div class="onde">📍 ${esc(e.local)} · ${diaTodo(e) ? 'dia todo' : `${hora(e.inicio)}–${hora(e.fim)}`}</div>
+          ${e.descricao ? `<p class="desc">${esc(e.descricao)}</p>` : ''}
+          <p class="prova">${prova}${e.confirmacoes > 0 && e.ultima_confirmacao ? ` <span class="meta">· última confirmação ${haQuanto(e.ultima_confirmacao)}</span>` : ''}</p>
+        </div>
+        ${galeriaHTML(e.id, regs, u)}
       </div>
-      ${e.encerramentos ? `<p class="meta">${e.encerramentos} ${e.encerramentos === 1 ? 'pessoa avisou' : 'pessoas avisaram'} que já terminou. Com 2 avisos o evento sai de “Acontecendo agora”.</p>` : ''}
+      <div class="barra-acoes" role="group" aria-label="Participar">
+        ${e.eu_confirmei
+          ? '<button type="button" class="acao feito" disabled><span aria-hidden="true">✔</span> Você está lá</button>'
+          : '<button type="button" class="acao" data-acao="confirmar"><span aria-hidden="true">✋</span> Estou aqui</button>'}
+        ${muralDisponivel || msgs.length ? `<button type="button" class="acao" data-acao="mural" aria-expanded="${muraisAbertos.has(e.id)}"><span aria-hidden="true">💬</span> Recados${msgs.length ? ` <span class="conta-n">${msgs.length}</span>` : ''}</button>` : ''}
+        <button type="button" class="acao" data-acao="foto"><span aria-hidden="true">📷</span> Foto</button>
+      </div>
+      ${muralDisponivel || msgs.length ? muralHTML(e, msgs, u) : ''}
+      <p class="fim-aviso">${e.eu_encerrei
+        ? 'Você avisou que já terminou.'
+        : 'Acabou? <button type="button" class="link" data-acao="encerrar">Avise que já terminou</button>'}${e.encerramentos ? ` · ${e.encerramentos} ${e.encerramentos === 1 ? 'aviso' : 'avisos'} (com 2 o evento sai daqui)` : ''}</p>
     </article>`;
   }).join('') : `<p class="nada-agora">Nenhum evento acontecendo neste momento. Sabe de algo rolando? <a href="#" data-acao="novo">Adicione na agenda</a>.</p>`;
+  restaurarEstadoMural(estado);
 
   renderFiltro();
   renderBarra();
@@ -255,15 +287,92 @@ $('#cal-grade').addEventListener('keydown', e => {
 const MAX_FOTOS = 8;
 const fotosAbertas = new Set(); // eventos com a galeria expandida
 function galeriaHTML(eventoId, regs, u) {
-  const fotos = regs.filter(r => r.foto_url), notas = regs.filter(r => !r.foto_url);
-  if (!regs.length) return '';
+  const fotos = regs.filter(r => r.foto_url);
+  if (!fotos.length) return ''; // legendas sem foto aparecem no mural
   const aberta = fotosAbertas.has(eventoId), vistas = aberta ? fotos : fotos.slice(0, MAX_FOTOS);
-  const den = r => (u && u.id !== r.usuario_id ? `<button type="button" class="denunciar" data-denunciar="${r.id}">denunciar</button>` : '');
   const tile = r => `<button type="button" class="mini" data-ver="${r.id}" title="${esc(r.legenda)} · ${esc(r.autor)}" aria-label="Ampliar foto: ${esc(r.legenda)}"><img src="${esc(r.foto_url)}" alt="${esc(r.legenda)}" loading="lazy" decoding="async"></button>`;
-  return `<div class="galeria">${fotos.length ? `<div class="minis">${vistas.map(tile).join('')}</div>` : ''}${fotos.length > MAX_FOTOS ? `<button type="button" class="botao-sec ver-todas" data-acao="todas-fotos">${aberta ? 'Mostrar menos' : `Ver todas as ${fotos.length} fotos`}</button>` : ''}${notas.length ? `<ul class="notas">${notas.map(r => `<li>“${esc(r.legenda)}” <span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den(r)}</li>`).join('')}</ul>` : ''}</div>`;
+  return `<div class="galeria">${fotos.length ? `<div class="minis">${vistas.map(tile).join('')}</div>` : ''}${fotos.length > MAX_FOTOS ? `<button type="button" class="botao-sec ver-todas" data-acao="todas-fotos">${aberta ? 'Mostrar menos' : `Ver todas as ${fotos.length} fotos`}</button>` : ''}</div>`;
 }
 
+// ---------- mural de recados ----------
+const PREVIA = 2;                       // recados visíveis com o mural fechado (os mais recentes)
+const muraisAbertos = new Set();        // eventos com o mural expandido
+const rascunhos = new Map();            // texto que a pessoa está digitando, por evento (sobrevive às atualizações)
+const nomeDe = (id, nome) => (ADMINS.has(id) ? 'Admin' : nome || 'Alguém');
+const iniciais = n => n.split(/\s+/).filter(p => /^\p{L}/u.test(p)).slice(0, 2).map(p => p[0]).join('').toUpperCase() || '?';
+const corDoNome = n => { let h = 0; for (const c of n) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h} 45% 42%)`; };
+const avatar = (id, nome) => { const n = nomeDe(id, nome); return `<span class="avatar" style="--c:${corDoNome(n)}" aria-hidden="true">${esc(iniciais(n))}</span>`; };
+
+function muralHTML(e, msgs, u) {
+  const aberto = muraisAbertos.has(e.id);
+  const vistos = aberto ? msgs : msgs.slice(-PREVIA);
+  const escondidos = msgs.length - vistos.length;
+  const item = m => {
+    const meu = u && u.id === m.usuario_id;
+    return `<li class="recado${meu ? ' meu' : ''}">${avatar(m.usuario_id, m.autor)}<div class="recado-corpo"><div class="bolha"><b>${esc(nomeDe(m.usuario_id, m.autor))}</b><p>${esc(m.texto)}</p></div>
+      <div class="recado-meta"><time datetime="${esc(m.criado_em)}">${haQuanto(m.criado_em)}</time>${meu
+        ? (m.tipo === 'recado' ? ` · <button type="button" class="link" data-recado-apagar="${m.id}">Apagar</button>` : '')
+        : u ? ` · <button type="button" class="link" data-recado-den="${m.id}" data-tipo="${m.tipo}">Denunciar</button>` : ''}</div></div></li>`;
+  };
+  const compor = u
+    ? `<form class="compor" data-recado-form="${e.id}">${avatar(u.id, u.nome)}<label class="sr" for="recado-${e.id}">Escreva um recado no mural</label><textarea id="recado-${e.id}" name="texto" rows="1" maxlength="500" required placeholder="Escreva no mural…" data-recado-input="${e.id}">${esc(rascunhos.get(e.id) || '')}</textarea><button class="enviar" aria-label="Enviar recado"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 11.5 21 3l-8.5 18-2.2-7.3L3 11.5z" fill="currentColor"/></svg></button></form>`
+    : '<button type="button" class="compor-entrar" data-acao="escrever">Entre para escrever no mural</button>';
+  return `<section class="mural${aberto ? ' aberto' : ''}" aria-label="Mural de recados">
+    ${escondidos > 0 ? `<button type="button" class="link ver-mais" data-acao="mural">Ver ${escondidos === 1 ? 'mais 1 recado' : `mais ${escondidos} recados`}</button>` : ''}
+    ${vistos.length ? `<ol class="recados" data-recados="${e.id}">${vistos.map(item).join('')}</ol>` : aberto ? '<p class="mural-vazio">Ninguém escreveu ainda. Conte como está aí!</p>' : ''}
+    ${muralDisponivel && (aberto || vistos.length || u) ? compor : ''}
+  </section>`;
+}
+
+// O cartão é redesenhado a cada atualização: guarda texto digitado, foco e rolagem para não atrapalhar quem escreve.
+function guardarEstadoMural() {
+  document.querySelectorAll('[data-recado-input]').forEach(t => rascunhos.set(Number(t.dataset.recadoInput), t.value));
+  const foco = document.activeElement?.dataset?.recadoInput;
+  const pos = foco ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+  const rolagem = new Map([...document.querySelectorAll('[data-recados]')].map(l => [l.dataset.recados, { topo: l.scrollTop, noFim: l.scrollHeight - l.scrollTop - l.clientHeight < 8 }]));
+  return { foco, pos, rolagem };
+}
+function restaurarEstadoMural({ foco, pos, rolagem }) {
+  document.querySelectorAll('[data-recados]').forEach(l => { const r = rolagem.get(l.dataset.recados); l.scrollTop = !r || r.noFim ? l.scrollHeight : r.topo; });
+  document.querySelectorAll('[data-recado-input]').forEach(ajustarAltura);
+  if (foco) { const t = document.querySelector(`[data-recado-input="${foco}"]`); if (t) { t.focus({ preventScroll: true }); t.setSelectionRange(...pos); } }
+}
+function ajustarAltura(t) { t.style.height = 'auto'; const borda = t.offsetHeight - t.clientHeight; t.style.height = Math.min(t.scrollHeight + borda, 140) + 'px'; t.style.overflowY = t.scrollHeight + borda > 140 ? 'auto' : 'hidden'; }
+function focarCompor(id) { const t = document.querySelector(`[data-recado-input="${id}"]`); if (t) t.focus(); }
+
+document.addEventListener('input', e => { const t = e.target.closest('[data-recado-input]'); if (t) { rascunhos.set(Number(t.dataset.recadoInput), t.value); ajustarAltura(t); } });
+document.addEventListener('keydown', e => { // Enter envia; Shift+Enter quebra a linha
+  const t = e.target.closest('[data-recado-input]');
+  if (t && e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); t.form.requestSubmit(); }
+});
+document.addEventListener('submit', async e => {
+  const f = e.target.closest('[data-recado-form]'); if (!f) return;
+  e.preventDefault();
+  const id = Number(f.dataset.recadoForm), texto = f.texto.value.trim(); if (!texto) return;
+  const btn = f.querySelector('.enviar'); btn.disabled = true;
+  try {
+    const m = await api.enviarRecado(id, texto);
+    recados.push({ ...m, autor: m.autor || api.usuario()?.nome });
+    rascunhos.delete(id); muraisAbertos.add(id); f.texto.value = '';
+    render(); focarCompor(id);
+    const l = document.querySelector(`[data-recados="${id}"]`); if (l) l.scrollTop = l.scrollHeight;
+  } catch (err) { toast(err.message || 'Não foi possível enviar o recado.'); btn.disabled = false; }
+});
+
 // ---------- ações ----------
+document.addEventListener('click', async e => {
+  const r = e.target.closest('[data-recado-apagar],[data-recado-den]');
+  if (r?.dataset.recadoApagar) {
+    const id = Number(r.dataset.recadoApagar);
+    try { await api.apagarRecado(id); recados = recados.filter(m => m.id !== id); render(); toast('Recado apagado.'); } catch (err) { toast(err.message); }
+    return;
+  }
+  if (r?.dataset.recadoDen) {
+    if (!exigirLogin()) return;
+    try { await api.denunciar(r.dataset.tipo === 'registro' ? 'registro' : 'recado', Number(r.dataset.recadoDen), 'conteúdo impróprio'); toast('Obrigado. O recado será revisado.'); } catch (err) { toast(err.message); }
+    return;
+  }
+});
 document.addEventListener('click', async e => {
   const t = e.target.closest('[data-acao],[data-cat],[data-ver],[data-denunciar]'); if (!t) return;
   if (t.dataset.cat) { filtro = t.dataset.cat; render(); return; }
@@ -285,6 +394,14 @@ document.addEventListener('click', async e => {
     if (!exigirLogin(() => confirmar(id))) return;
     confirmar(id);
   }
+  if (acao === 'mural') { // abre/fecha a conversa; ao abrir, já deixa pronto para escrever
+    const abrir = !muraisAbertos.has(id);
+    abrir ? muraisAbertos.add(id) : muraisAbertos.delete(id);
+    render();
+    if (abrir) { if (api.usuario()) focarCompor(id); const l = document.querySelector(`[data-recados="${id}"]`); if (l) l.scrollTop = l.scrollHeight; }
+    return;
+  }
+  if (acao === 'escrever') { if (exigirLogin(() => { muraisAbertos.add(id); render(); focarCompor(id); })) { muraisAbertos.add(id); render(); focarCompor(id); } return; }
   if (acao === 'todas-fotos') { fotosAbertas.has(id) ? fotosAbertas.delete(id) : fotosAbertas.add(id); render(); return; }
   if (acao === 'encerrar') {
     if (!exigirLogin(() => encerrar(id))) return;

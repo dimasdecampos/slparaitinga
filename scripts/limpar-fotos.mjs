@@ -1,4 +1,4 @@
-// Apaga as fotos da agenda que não são de hoje (horário de Brasília): arquivos do Storage e linhas da tabela "registros".
+// Apaga as fotos e os recados da agenda que não são de hoje (horário de Brasília): arquivos do Storage e linhas de "registros" e "recados".
 // Roda todo dia logo depois da meia-noite pelo GitHub Actions (.github/workflows/limpar-fotos.yml).
 // Precisa de SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (secrets do repositório). A chave service_role nunca vai para o site.
 const URL_BASE = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
@@ -29,3 +29,9 @@ console.log('Arquivos apagados:', velhos.length);
 // 2) linhas (fotos e legendas) de antes de hoje
 const apagadas = await chamar(`/rest/v1/registros?criado_em=lt.${encodeURIComponent(corte.toISOString())}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
 console.log('Registros apagados:', apagadas.length);
+
+// 3) recados do mural de antes de hoje (a tabela pode ainda não existir: aí só avisa)
+try {
+  const recados = await chamar(`/rest/v1/recados?criado_em=lt.${encodeURIComponent(corte.toISOString())}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+  console.log('Recados apagados:', recados.length);
+} catch (err) { console.log('Recados: tabela indisponível ou erro:', err.message); }
