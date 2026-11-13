@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda da cidade: eventos ao vivo · São Luiz do Paraitinga</title>
+<meta name="description" content="Agenda colaborativa de São Luiz do Paraitinga. Moradores adicionam eventos, confirmam o que está acontecendo agora e enviam fotos.">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="São Luiz do Paraitinga">
+<meta property="og:title" content="Agenda da cidade: eventos ao vivo · São Luiz do Paraitinga">
+<meta property="og:description" content="Agenda colaborativa de São Luiz do Paraitinga. Moradores adicionam eventos, confirmam o que está acontecendo agora e enviam fotos.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#e0263d">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="agenda.css">
+
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <div class="topo-in">
+    <a class="logo" href="./" aria-label="slparaitinga, página inicial"><svg class="flor" viewBox="-24 -24 48 48" aria-hidden="true"><g fill="#22a35a"><ellipse rx="4.5" ry="10" cy="-13" transform="rotate(36)"/><ellipse rx="4.5" ry="10" cy="-13" transform="rotate(252)"/></g><g fill="#e5243b"><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(0)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(72)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(144)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(216)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(288)"/></g><circle r="5.5" fill="#ffd23f"/><g fill="#ffffff"><circle r="1.1" cy="-2.4"/><circle r="1.1" cx="2.3" cy=".8"/><circle r="1.1" cx="-2.3" cy=".8"/></g></svg><span>slparaitinga</span></a>
+    <button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu"><span></span><span class="sr">Abrir menu</span></button>
+    <nav id="menu" class="menu" aria-label="Principal">
+      <a href="./">Início</a>
+      <a href="agenda.html" aria-current="page">Agenda</a>
+      <a href="festas.html">Festas</a>
+      <a href="lugares.html">Lugares</a>
+      <a href="historia.html">História</a>
+      <a href="servicos.html">Serviços</a>
+    </nav>
+    <a class="clima-chip" href="servicos.html#tempo" data-clima-chip aria-label="Tempo agora"></a>
+  </div>
+</header>
+<main id="conteudo">
+<header class="pagina-topo"><div class="larg"><p class="olho">Agenda colaborativa</p><h1>Agenda da cidade</h1><p class="lema">Feita por quem mora aqui: adicione eventos, confirme o que está acontecendo e mande uma foto.</p></div></header>
+<div class="larg agenda-conta"><span id="conta" class="conta"></span></div>
+<div id="aviso-demo" class="aviso-demo" hidden><strong>Modo demonstração.</strong> Os eventos e fotos marcados “exemplo” são fictícios, e o que você adicionar fica só neste navegador. Ao ligar o banco de dados, a agenda passa a ser compartilhada por todos.</div>
+<div class="agenda-pagina">
+  <section aria-labelledby="t-agora" id="bloco-agora">
+    <div class="cabecalho-secao"><h2 id="t-agora"><span class="ponto-vivo" aria-hidden="true"></span>Acontecendo agora</h2><button type="button" class="botao-primario" id="novo-evento">+ Adicionar evento</button></div>
+    <div id="agora" class="lista-agora"></div>
+  </section>
+  <section aria-labelledby="t-prox">
+    <div class="cabecalho-secao"><h2 id="t-prox">Próximos eventos</h2><div id="filtro-cat" class="filtros" role="toolbar" aria-label="Filtrar por tipo"></div></div>
+    <div id="proximos"></div>
+  </section>
+  <section class="como-funciona" aria-labelledby="t-como">
+    <h2 id="t-como">Como funciona</h2>
+    <ol>
+      <li><b>Viu um evento marcado?</b> Entre e adicione na agenda: o que é, onde e quando.</li>
+      <li><b>Está rolando agora?</b> Na hora do evento aparece o botão <em>“Está acontecendo”</em>. Quanto mais gente confirma, mais confiável fica.</li>
+      <li><b>Mande uma foto com legenda</b> para quem está em casa saber como está: “dança de fitas acontecendo agora na praça”.</li>
+    </ol>
+    <p class="nota">Confirmações e fotos são aceitas de 30 minutos antes até 2 horas depois do fim do evento. Conteúdo denunciado por 3 pessoas sai do ar até ser revisado.</p>
+  </section>
+</div>
+
+<dialog id="dlg-entrar" class="dialogo"><form method="dialog" id="form-entrar">
+  <h2>Entrar</h2><p class="nota" id="entrar-explica"></p>
+  <label>Seu nome (como vai aparecer)<input name="nome" required minlength="2" maxlength="60" autocomplete="name"></label>
+  <label id="campo-email">E-mail<input name="email" type="email" autocomplete="email"></label>
+  <p class="erro" role="alert"></p>
+  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Entrar</button></div>
+</form></dialog>
+
+<dialog id="dlg-evento" class="dialogo"><form method="dialog" id="form-evento">
+  <h2>Adicionar evento</h2>
+  <label>O que vai acontecer?<input name="titulo" required minlength="3" maxlength="120" placeholder="Ex.: Dança de fitas, show, missa, feira…"></label>
+  <label>Onde?<input name="local" required minlength="2" maxlength="120" list="locais" placeholder="Ex.: Praça Dr. Oswaldo Cruz"></label>
+  <datalist id="locais"><option value="Praça Dr. Oswaldo Cruz"><option value="Igreja Matriz São Luís de Tolosa"><option value="Igreja do Rosário"><option value="Capela das Mercês"><option value="Capela Nossa Senhora dos Prazeres"><option value="Casa de Oswaldo Cruz"><option value="Largo do Teatro"><option value="Museu Encuca a Cuca"><option value="Praça do Cruzeiro"><option value="Praça de Eventos"><option value="Parque Linear Urbano"><option value="Prefeitura Municipal"><option value="Santa Casa de Misericórdia"><option value="Rio Paraitinga"><option value="Mercado Municipal"></datalist>
+  <div class="linha"><label>Dia<input name="dia" type="date" required></label><label>Começa<input name="hora_ini" type="time" required></label><label>Termina<input name="hora_fim" type="time" required></label></div>
+  <label>Tipo<select name="categoria" id="sel-categoria"></select></label>
+  <label>Detalhes (opcional)<textarea name="descricao" rows="3" maxlength="2000" placeholder="Quem organiza, se é gratuito, o que levar…"></textarea></label>
+  <p class="erro" role="alert"></p>
+  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Publicar</button></div>
+</form></dialog>
+
+<dialog id="dlg-foto" class="dialogo"><form method="dialog" id="form-foto">
+  <h2>Mostre como está</h2><p class="nota" id="foto-evento"></p>
+  <label class="seletor-foto"><input name="foto" type="file" accept="image/*" capture="environment"><img id="previa" alt="" hidden><span id="sem-foto">Tirar ou escolher uma foto (opcional)</span></label>
+  <label>Legenda<input name="legenda" required maxlength="280" placeholder="Ex.: dança de fitas acontecendo agora na praça"></label>
+  <p class="erro" role="alert"></p>
+  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Publicar</button></div>
+</form></dialog>
+
+<dialog id="dlg-ver" class="dialogo dialogo-foto"><form method="dialog"><img id="foto-grande" alt=""><p id="legenda-grande"></p><div class="acoes"><button class="botao-sec">Fechar</button></div></form></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</main>
+<footer class="rodape">
+  <div class="rodape-in">
+    <div><a class="logo" href="./"><svg class="flor" viewBox="-24 -24 48 48" aria-hidden="true"><g fill="#22a35a"><ellipse rx="4.5" ry="10" cy="-13" transform="rotate(36)"/><ellipse rx="4.5" ry="10" cy="-13" transform="rotate(252)"/></g><g fill="#e5243b"><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(0)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(72)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(144)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(216)"/><ellipse rx="6.5" ry="10" cy="-9" transform="rotate(288)"/></g><circle r="5.5" fill="#ffd23f"/><g fill="#ffffff"><circle r="1.1" cy="-2.4"/><circle r="1.1" cx="2.3" cy=".8"/><circle r="1.1" cx="-2.3" cy=".8"/></g></svg><span>slparaitinga</span></a><p>Agenda, festas e lugares de São Luiz do Paraitinga, feito com quem mora aqui.</p></div>
+    <nav aria-label="Rodapé"><a href="./">Início</a><a href="agenda.html">Agenda</a><a href="festas.html">Festas</a><a href="lugares.html">Lugares</a><a href="historia.html">História</a><a href="servicos.html">Serviços</a></nav>
+    <p class="creditos">Mapa: © <a href="https://www.openstreetmap.org/copyright" rel="noopener">colaboradores do OpenStreetMap</a>. Previsão do tempo: Open-Meteo. A agenda é enviada pelos moradores; confirme horários com os organizadores.</p>
+  </div>
+</footer>
+<script type="module" src="site.js"></script>
+<script src="config.js"></script>
+<script type="module" src="agenda.js"></script>
+</body>
+</html>

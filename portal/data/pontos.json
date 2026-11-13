@@ -1,0 +1,114 @@
+[
+ {
+  "slug": "praca-dr-oswaldo-cruz",
+  "nome": "Praça Dr. Oswaldo Cruz",
+  "tipo": "praca",
+  "texto": "A praça principal: palco do Carnaval, da Festa do Divino e dos encontros da cidade, com o coreto no centro.",
+  "x": 0,
+  "y": 0
+ },
+ {
+  "slug": "igreja-matriz-sao-luis-de-tolosa",
+  "nome": "Igreja Matriz São Luís de Tolosa",
+  "tipo": "igreja",
+  "texto": "De frente para a praça principal. Desabou na enchente de 2010 e foi reconstruída pela cidade.",
+  "x": 68.7,
+  "y": 35.6
+ },
+ {
+  "slug": "igreja-do-rosario",
+  "nome": "Igreja do Rosário",
+  "tipo": "igreja",
+  "texto": "Uma das igrejas históricas do centro, no alto da ladeira.",
+  "x": 164.1,
+  "y": -95.2
+ },
+ {
+  "slug": "capela-das-merces",
+  "nome": "Capela das Mercês",
+  "tipo": "igreja",
+  "texto": "Capela histórica do centro.",
+  "x": 96.4,
+  "y": 186.4
+ },
+ {
+  "slug": "capela-nossa-senhora-dos-prazeres",
+  "nome": "Capela Nossa Senhora dos Prazeres",
+  "tipo": "igreja",
+  "texto": "Capela do outro lado do rio.",
+  "x": -179.5,
+  "y": -52.2
+ },
+ {
+  "slug": "casa-de-oswaldo-cruz",
+  "nome": "Casa de Oswaldo Cruz",
+  "tipo": "cultura",
+  "texto": "Casa onde nasceu o médico sanitarista Oswaldo Cruz, em 1872.",
+  "x": 167.5,
+  "y": 136.6
+ },
+ {
+  "slug": "largo-do-teatro",
+  "nome": "Largo do Teatro",
+  "tipo": "praca",
+  "texto": "Largo histórico do centro, cenário de ensaios e apresentações.",
+  "x": 147.1,
+  "y": -47.5
+ },
+ {
+  "slug": "museu-encuca-a-cuca",
+  "nome": "Museu Encuca a Cuca",
+  "tipo": "cultura",
+  "texto": "Museu no centro da cidade.",
+  "x": 24.4,
+  "y": -97.2
+ },
+ {
+  "slug": "praca-do-cruzeiro",
+  "nome": "Praça do Cruzeiro",
+  "tipo": "praca",
+  "texto": "Praça em um dos pontos altos do centro.",
+  "x": 351.1,
+  "y": 101.1
+ },
+ {
+  "slug": "praca-de-eventos",
+  "nome": "Praça de Eventos",
+  "tipo": "praca",
+  "texto": "Espaço para shows e festas.",
+  "x": -265.6,
+  "y": 206.3
+ },
+ {
+  "slug": "parque-linear-urbano",
+  "nome": "Parque Linear Urbano",
+  "tipo": "praca",
+  "texto": "Área verde às margens do rio.",
+  "x": 182.7,
+  "y": 492.2
+ },
+ {
+  "slug": "prefeitura-municipal",
+  "nome": "Prefeitura Municipal",
+  "tipo": "servico",
+  "texto": "Atendimento ao cidadão. Praça Dr. Oswaldo Cruz, 62. Telefone (12) 3671-7000.",
+  "x": -42.2,
+  "y": 4.7
+ },
+ {
+  "slug": "santa-casa-de-misericordia",
+  "nome": "Santa Casa de Misericórdia",
+  "tipo": "servico",
+  "texto": "Hospital da cidade.",
+  "x": 319.2,
+  "y": 375.7
+ },
+ {
+  "slug": "rio-paraitinga",
+  "nome": "Rio Paraitinga",
+  "tipo": "praca",
+  "texto": "O rio que corta a cidade. Na cheia é monitorado pela Defesa Civil; fora dela, é procurado para o rafting.",
+  "x": -54.1,
+  "y": 293.3
+ }
+]

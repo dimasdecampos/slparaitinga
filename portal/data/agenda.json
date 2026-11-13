@@ -1,0 +1,60 @@
+{
+ "atualizado": "2026-11-13T13:39:01.565Z",
+ "oficial": [],
+ "tradicional": [
+  {
+   "titulo": "Carnaval de Marchinhas",
+   "inicio": "2027-02-05",
+   "fim": "2027-02-10",
+   "descricao": "Um dos carnavais de rua mais tradicionais do país, embalado pelas marchinhas compostas na cidade e pelos bonecões.",
+   "tipo": "tradicional",
+   "fonte": "Calendário tradicional (datas aproximadas — confirmar com a Prefeitura)"
+  },
+  {
+   "titulo": "Semana Santa",
+   "inicio": "2027-03-21",
+   "fim": "2027-03-28",
+   "descricao": "Procissões e celebrações religiosas no centro histórico.",
+   "tipo": "tradicional",
+   "fonte": "Calendário tradicional (datas aproximadas — confirmar com a Prefeitura)"
+  },
+  {
+   "titulo": "Festa do Divino Espírito Santo",
+   "inicio": "2027-05-07",
+   "fim": "2027-05-16",
+   "descricao": "Principal festa religiosa e popular da cidade, encerrada no domingo de Pentecostes, com cavalhada, congadas, moçambiques e o afogado servido à população.",
+   "tipo": "tradicional",
+   "fonte": "Calendário tradicional (datas aproximadas — confirmar com a Prefeitura)"
+  },
+  {
+   "titulo": "Festa de São Luís de Tolosa (padroeiro)",
+   "inicio": "2027-08-19",
+   "descricao": "Celebração do padroeiro do município.",
+   "tipo": "tradicional",
+   "fonte": "Calendário tradicional (datas aproximadas — confirmar com a Prefeitura)"
+  },
+  {
+   "titulo": "Festa do Saci",
+   "inicio": "2027-10-31",
+   "descricao": "Celebração do folclore brasileiro em contraponto ao Halloween, ligada à tradição caipira local.",
+   "tipo": "tradicional",
+   "fonte": "Calendário tradicional (datas aproximadas — confirmar com a Prefeitura)"
+  }
+ ],
+ "noticias": [
+  {
+   "titulo": "OFICINA - Qual é a cor da minha casa?",
+   "link": "https://www.saoluizdoparaitinga.sp.gov.br/noticias/cultura/oficina-qual-e-a-cor-da-minha-casa",
+   "publicado": "2026-09-15T14:32:00.000Z",
+   "tipo": "noticia",
+   "fonte": "Prefeitura"
+  },
+  {
+   "titulo": "42º Festival Nhô Frade de Marchinhas de São Luiz do Paraitinga - SP",
+   "link": "https://www.saoluizdoparaitinga.sp.gov.br/noticias/cultura/42-festival-nho-frade-de-marchinhas-de-sao-luiz-do-paraitinga-sp",
+   "publicado": "2026-09-11T14:49:00.000Z",
+   "tipo": "noticia",
+   "fonte": "Prefeitura"
+  }
+ ]
+}

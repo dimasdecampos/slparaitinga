@@ -1,0 +1,5 @@
+import fs from 'fs';
+const q=`[out:json][timeout:60][bbox:-23.2330,-45.3240,-23.2110,-45.2960];(way["building"];way["highway"];way["waterway"];way["natural"="water"];way["leisure"];way["landuse"];way["natural"="wood"];relation["natural"="water"];node["amenity"];node["tourism"];node["historic"];);out body;>;out skel qt;`;
+const urls=['https://maps.mail.ru/osm/tools/overpass/api/interpreter','https://overpass-api.de/api/interpreter','https://overpass.openstreetmap.fr/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass-api.de/api/interpreter'];
+for(const u of urls){try{const r=await fetch(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':'city3d-prototype/0.1'},signal:AbortSignal.timeout(75000)});console.log(u,r.status);if(!r.ok)continue;const t=await r.text();if(!t.startsWith('{')){console.log('not json',t.slice(0,200));continue}fs.writeFileSync('data/osm.json',t);console.log('bytes',t.length);process.exit(0)}catch(e){console.log(u,'ERR',e.message,e.cause?.code)}}
+process.exit(1)
