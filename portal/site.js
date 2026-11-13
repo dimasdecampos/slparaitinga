@@ -23,7 +23,7 @@ const chip = document.querySelector('[data-clima-chip]'), semana = document.quer
 if (chip || semana) {
   const API = 'https://api.open-meteo.com/v1/forecast?latitude=-23.222&longitude=-45.311&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=7';
   const tentar = (u, ms) => fetch(u, { signal: AbortSignal.timeout(ms) }).then(r => (r.ok ? r.json() : Promise.reject(r.status)));
-  tentar(API, 6000).catch(() => tentar('data/clima.json', 4000)).then(c => {
+  tentar(API, 6000).catch(() => tentar(new URL('data/clima.json', import.meta.url), 4000)).then(c => {
     const a = c.current, [ic, desc] = wmo(a.weather_code);
     if (chip) chip.textContent = `${ic} ${Math.round(a.temperature_2m)}°`;
     if (semana) {

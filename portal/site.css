@@ -268,3 +268,12 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
   .explore-card { min-height: 0; }
   .painel-acoes .btn { flex: 1; }
 }
+
+/* páginas de cada festa */
+.festa h2 a { color: inherit; text-decoration: none; }
+.festa h2 a:hover { text-decoration: underline; }
+.festa .mais { margin-top: 12px; }
+.festa-pagina h2 { margin: 28px 0 8px; font-size: 1.35rem; }
+.festa-pagina p { line-height: 1.65; }
+.festa-quando { padding: 14px 18px; background: var(--cartao); border-radius: 16px; box-shadow: var(--sombra); }
+.veja-tambem { padding-left: 1.2em; }

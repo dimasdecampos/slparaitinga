@@ -35,6 +35,7 @@ const FESTAS = [
   const fmt = d => d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', timeZone: 'UTC' });
   return { ...f, ini: isoDia(ini), fim: isoDia(fim), quando: isoDia(ini) === isoDia(fim) ? `${fmt(ini)} de ${ini.getUTCFullYear()}` : `${fmt(ini)} a ${fmt(fim)} de ${fim.getUTCFullYear()}` };
 }).sort((a, b) => (a.ini || '0').localeCompare(b.ini || '0'));
+FESTAS.forEach(f => { f.pagina = `festas/${f.id}.html`; });
 const proximaFesta = FESTAS.find(f => f.ini);
 
 // ---------- layout ----------
@@ -47,7 +48,14 @@ const FLOR_DESENHO = `<g fill="${MARCA.folha}">${[36, 252].map(a => `<ellipse rx
   + `<g fill="${MARCA.ponto}"><circle r="1.1" cy="-2.4"/><circle r="1.1" cx="2.3" cy=".8"/><circle r="1.1" cx="-2.3" cy=".8"/></g>`;
 const FLOR = `<svg class="flor" viewBox="-24 -24 48 48" aria-hidden="true">${FLOR_DESENHO}</svg>`;
 
-function layout({ arquivo, titulo, descricao, corpo, scripts = '', css = '', jsonld = [], migalha }) {
+function layout(p) {
+  const html = layoutBase(p);
+  if (!p.arquivo.includes('/')) return html;
+  const sobe = '../'.repeat(p.arquivo.split('/').length - 1);
+  const rel = u => /^([a-z]+:|#|\/)/i.test(u) ? u : sobe + (u === './' ? '' : u);
+  return html.replace(/(href|src)="([^"]*)"/g, (_, a, u) => a + '="' + rel(u) + '"').replace(/url\((img\/[^)]*)\)/g, (_, u) => 'url(' + sobe + u + ')');
+}
+function layoutBase({ arquivo, titulo, descricao, corpo, scripts = '', css = '', jsonld = [], migalha }) {
   const canon = URL_SITE ? `${URL_SITE}/${arquivo === 'index.html' ? '' : arquivo}` : '';
   const tituloCompleto = arquivo === 'index.html' ? titulo : `${titulo} · São Luiz do Paraitinga`;
   const ld = [...jsonld];
@@ -83,7 +91,7 @@ ${ld.map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/<
     <a class="logo" href="./" aria-label="slparaitinga, página inicial">${FLOR}<span>slparaitinga</span></a>
     <button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu"><span></span><span class="sr">Abrir menu</span></button>
     <nav id="menu" class="menu" aria-label="Principal">
-      ${NAV.map(([href, nome, arq]) => `<a href="${href}"${(arq || href) === arquivo ? ' aria-current="page"' : ''}>${nome}</a>`).join('\n      ')}
+      ${NAV.map(([href, nome, arq]) => `<a href="${href}"${(arq || href) === arquivo || (href === 'festas.html' && arquivo.startsWith('festas/')) ? ' aria-current="page"' : ''}>${nome}</a>`).join('\n      ')}
     </nav>
     <a class="clima-chip" href="servicos.html#tempo" data-clima-chip aria-label="Tempo agora"></a>
   </div>
@@ -151,7 +159,7 @@ paginas.push({
   <div class="coluna-lateral">
     <section class="secao" aria-labelledby="t-festa">
       <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
-      <a class="explore-card destaque" href="festas.html" style="--chita:url(img/chita-${proximaFesta.chita}.svg)"><strong>${esc(proximaFesta.nome)}</strong><span>${esc(proximaFesta.quando)}</span><span class="contagem" data-contagem="${proximaFesta.ini}" data-fim="${proximaFesta.fim}"></span></a>
+      <a class="explore-card destaque" href="${proximaFesta.pagina || 'festas.html'}" style="--chita:url(img/chita-${proximaFesta.chita}.svg)"><strong>${esc(proximaFesta.nome)}</strong><span>${esc(proximaFesta.quando)}</span><span class="contagem" data-contagem="${proximaFesta.ini}" data-fim="${proximaFesta.fim}"></span></a>
     </section>
   </div>
 </div>
@@ -256,7 +264,7 @@ paginas.push({
 <div class="chita-faixa" aria-hidden="true"></div>
 <section class="secao larg">
   <div class="festas">
-    ${FESTAS.map(f => `<article class="festa" id="${f.id}"><div class="festa-topo" style="--chita:url(img/chita-${f.chita}.svg)"></div><div class="festa-corpo"><p class="quando">${f.ini ? `<time datetime="${f.ini}">${esc(f.quando)}</time>` : esc(f.quando)}</p><h2>${esc(f.nome)}</h2><p>${esc(f.texto)}</p>${f.ini ? `<p class="contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></p>` : ''}</div></article>`).join('\n    ')}
+    ${FESTAS.map(f => `<article class="festa" id="${f.id}"><div class="festa-topo" style="--chita:url(img/chita-${f.chita}.svg)"></div><div class="festa-corpo"><p class="quando">${f.ini ? `<time datetime="${f.ini}">${esc(f.quando)}</time>` : esc(f.quando)}</p><h2><a href="${f.pagina}">${esc(f.nome)}</a></h2><p>${esc(f.texto)}</p>${f.ini ? `<p class="contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></p>` : ''}<p class="mais"><a class="link-seta" href="${f.pagina}">História e detalhes</a></p></div></article>`).join('\n    ')}
   </div>
   <p class="nota">As datas seguem o calendário religioso e popular e podem mudar. Confirme a programação com a Prefeitura e os organizadores. Eventos do dia a dia ficam na <a href="agenda.html">agenda da cidade</a>.</p>
 </section>`,
@@ -317,82 +325,10 @@ paginas.push({
 </section>`,
 });
 
-// ---------- páginas de eventos individuais (SEO) ----------
-async function gerarPaginasEventos() {
-  const cfg_supabase = { url: 'https://smlhkifwlbqsvfsixkvo.supabase.co', key: 'sb_publishable_FvMdZ86fu1QYZ1HLEfMmwg_awn-6rhu' };
-  const criarSlug = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const textoGenerico = (cat, nome) => {
-    const textos = {
-      'Show': `Um show em São Luiz do Paraitinga. Acompanhe a programação cultural da cidade na agenda.`,
-      'Festa': `Um evento festivo em São Luiz do Paraitinga. Confira a data, hora e local para não perder.`,
-      'Missa': `Uma celebração religiosa em São Luiz do Paraitinga. Verifique o horário e o local.`,
-      'Feira': `Uma feira em São Luiz do Paraitinga. Veja quando e onde acontece.`,
-      'Oficina': `Uma oficina em São Luiz do Paraitinga. Inscreva-se e aprenda algo novo.`,
-      'Outro': `Um evento em São Luiz do Paraitinga. Confira os detalhes na agenda da cidade.`
-    };
-    return textos[cat] || textos['Outro'];
-  };
+// ---------- uma página para cada festa (SEO) ----------
+await import('./festas-conteudo.mjs').then(m => m.gerar({ paginas, FESTAS, cabecalhoPagina, esc, lugarLD }));
 
-  try {
-    const res = await fetch(`${cfg_supabase.url}/rest/v1/eventos?select=id,titulo,inicio,fim,local,categoria,descricao,oculto&oculto=is.false&order=inicio`, {
-      headers: { 'apikey': cfg_supabase.key }
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
-    const eventos = await res.json();
-
-    if (!fs.existsSync(aqui('./eventos'))) fs.mkdirSync(aqui('./eventos'));
-
-    for (const ev of eventos) {
-      const slug = criarSlug(ev.titulo);
-      const arquivo = `eventos/${slug}.html`;
-      const dataIni = new Date(ev.inicio);
-      const dataFim = new Date(ev.fim);
-      const dataBR = dataIni.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' });
-      const descricao = ev.descricao || textoGenerico(ev.categoria, ev.titulo);
-
-      paginas.push({
-        arquivo: arquivo,
-        titulo: ev.titulo,
-        descricao: descricao.slice(0, 160),
-        migalha: ev.titulo,
-        jsonld: [{
-          '@context': 'https://schema.org',
-          '@type': 'Event',
-          name: ev.titulo,
-          description: descricao,
-          startDate: ev.inicio,
-          endDate: ev.fim,
-          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-          eventStatus: dataIni > HOJE ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventCancelled',
-          location: { ...lugarLD, name: ev.local || 'São Luiz do Paraitinga' }
-        }],
-        corpo: `${cabecalhoPagina('Evento', esc(ev.titulo), dataBR)}
-<section class="secao larg estreita">
-  <article>
-    <p>${esc(descricao)}</p>
-    <div style="margin: 2rem 0; padding: 1.5rem; background: #f5f5f5; border-radius: 12px; text-align: center;">
-      <p style="margin: 0 0 0.5rem; color: #666; font-size: 0.9rem;">📍 Quando</p>
-      <p style="margin: 0; font-weight: 600; font-size: 1.1rem;">${esc(dataBR)}</p>
-      ${ev.local ? `<p style="margin: 1rem 0 0; color: #666; font-size: 0.9rem;">📍 Onde</p><p style="margin: 0; font-weight: 500;">${esc(ev.local)}</p>` : ''}
-    </div>
-    <p style="text-align: center; margin-top: 2rem;">
-      <a class="btn" href="agenda.html">Voltar para a agenda</a>
-    </p>
-  </article>
-</section>`
-      });
-    }
-    console.log(`Eventos: ${eventos.length} páginas geradas`);
-  } catch (err) {
-    console.error('Aviso: não foi possível buscar eventos do Supabase. As páginas de eventos não foram geradas.', err.message);
-  }
-}
-
-await gerarPaginasEventos();
-
+fs.mkdirSync(aqui('./festas'), { recursive: true });
 for (const p of paginas) fs.writeFileSync(aqui('./' + p.arquivo), layout(p));
 
 // ---------- arquivos de SEO ----------
