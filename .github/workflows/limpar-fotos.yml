@@ -1,0 +1,23 @@
+# Apaga as fotos da agenda no fim do dia (elas só valem no dia do evento).
+# Precisa dos secrets SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (Settings > Secrets and variables > Actions).
+name: Limpar fotos do dia
+
+on:
+  schedule:
+    - cron: '10 3 * * *'   # 00:10 em Brasília (03:10 UTC)
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  limpar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/limpar-fotos.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

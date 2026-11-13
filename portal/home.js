@@ -48,7 +48,7 @@ async function atualizar(primeira) {
   if (mapa) { mapa.marcarVivos(); if (primeira && !pedido) mapa.vistaInicial(false); }
   // As fotos só aparecem ao abrir um lugar: carregam depois, sem atrasar o resto.
   if (api) {
-    try { registros = await api.listarRegistros(eventos.filter(e => janelaAberta(e)).map(e => e.id)); } catch (e) { console.warn('[home] erro ao carregar as fotos', e); }
+    try { registros = (await api.listarRegistros(eventos.filter(e => janelaAberta(e)).map(e => e.id))).filter(r => new Date(r.criado_em).toDateString() === new Date().toDateString()); } catch (e) { console.warn('[home] erro ao carregar as fotos', e); }
   }
 }
 

@@ -116,7 +116,7 @@ async function carregar() {
     eventos = await api.listarEventos(de, ate);
     render();                                   // o calendário aparece sem esperar as fotos
     const vivos = eventos.filter(e => janelaAberta(e));
-    registros = await api.listarRegistros(vivos.map(e => e.id));
+    registros = (await api.listarRegistros(vivos.map(e => e.id))).filter(r => chave(new Date(r.criado_em)) === chave(new Date())); // as fotos duram só o dia
     render();
   } catch (err) { console.error(err); toast(err.message || 'Erro ao carregar a agenda.'); }
 }
@@ -140,6 +140,7 @@ function render() {
       <div class="onde">📍 ${esc(e.local)} · ${diaTodo(e) ? 'dia todo' : `${hora(e.inicio)}–${hora(e.fim)}`}</div>
       ${e.descricao ? `<p class="desc">${esc(e.descricao)}</p>` : ''}
       <div class="termometro">${conf}</div>
+      ${galeriaHTML(e.id, regs, u)}
       <div class="acoes-vivo">
         ${e.eu_confirmei
           ? `<button type="button" class="botao-primario ja" disabled>✔ Você confirmou</button>`
@@ -150,7 +151,6 @@ function render() {
           : `<button type="button" class="botao-sec" data-acao="encerrar">🏁 Já terminou</button>`}
       </div>
       ${e.encerramentos ? `<p class="meta">${e.encerramentos} ${e.encerramentos === 1 ? 'pessoa avisou' : 'pessoas avisaram'} que já terminou. Com 2 avisos o evento sai de “Acontecendo agora”.</p>` : ''}
-      ${regs.length ? `<div class="fotos">${regs.map(r => registroHTML(r, u)).join('')}</div>` : ''}
     </article>`;
   }).join('') : `<p class="nada-agora">Nenhum evento acontecendo neste momento. Sabe de algo rolando? <a href="#" data-acao="novo">Adicione na agenda</a>.</p>`;
 
@@ -252,11 +252,15 @@ $('#cal-grade').addEventListener('keydown', e => {
   const d = doDia(b.dataset.dia); d.setDate(d.getDate() + passo);
   const alvo = $(`[data-dia="${chave(d)}"]`); if (alvo) alvo.focus();
 });
-function registroHTML(r, u) {
-  const den = u && u.id !== r.usuario_id ? `<button type="button" class="denunciar" data-denunciar="${r.id}">denunciar</button>` : '';
-  if (!r.foto_url) return `<div class="registro so-texto"><div class="txt"><b>“${esc(r.legenda)}”</b><span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den}</div></div>`;
-  return `<figure class="registro" style="margin:0"><button type="button" class="ver" data-ver="${r.id}" aria-label="Ampliar foto"><img src="${esc(r.foto_url)}" alt="${esc(r.legenda)}" loading="lazy"></button>
-    <figcaption class="txt"><b>${esc(r.legenda)}</b><span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den}</figcaption></figure>`;
+const MAX_FOTOS = 6;
+const fotosAbertas = new Set(); // eventos com a galeria expandida
+function galeriaHTML(eventoId, regs, u) {
+  const fotos = regs.filter(r => r.foto_url), notas = regs.filter(r => !r.foto_url);
+  if (!regs.length) return '';
+  const aberta = fotosAbertas.has(eventoId), vistas = aberta ? fotos : fotos.slice(0, MAX_FOTOS);
+  const den = r => (u && u.id !== r.usuario_id ? `<button type="button" class="denunciar" data-denunciar="${r.id}">denunciar</button>` : '');
+  const tile = r => `<figure class="foto"><button type="button" class="ver" data-ver="${r.id}" aria-label="Ampliar foto: ${esc(r.legenda)}"><img src="${esc(r.foto_url)}" alt="${esc(r.legenda)}" loading="lazy" decoding="async"></button><figcaption><b>${esc(r.legenda)}</b><span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den(r)}</figcaption></figure>`;
+  return `<div class="galeria">${fotos.length ? `<div class="mosaico n-${Math.min(vistas.length, 4)}">${vistas.map(tile).join('')}</div>` : ''}${fotos.length > MAX_FOTOS ? `<button type="button" class="botao-sec ver-todas" data-acao="todas-fotos">${aberta ? 'Mostrar menos' : `Ver todas as ${fotos.length} fotos`}</button>` : ''}${notas.length ? `<ul class="notas">${notas.map(r => `<li>“${esc(r.legenda)}” <span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den(r)}</li>`).join('')}</ul>` : ''}</div>`;
 }
 
 // ---------- ações ----------
@@ -279,6 +283,7 @@ document.addEventListener('click', async e => {
     if (!exigirLogin(() => confirmar(id))) return;
     confirmar(id);
   }
+  if (acao === 'todas-fotos') { fotosAbertas.has(id) ? fotosAbertas.delete(id) : fotosAbertas.add(id); render(); return; }
   if (acao === 'encerrar') {
     if (!exigirLogin(() => encerrar(id))) return;
     encerrar(id);
