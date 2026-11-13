@@ -12,8 +12,8 @@
 .botao-sec { background: transparent; border: 1px solid var(--linha); color: var(--tinta); }
 
 /* acontecendo agora */
-.ponto-vivo { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--verde); margin-right: 10px; vertical-align: 3px; box-shadow: 0 0 0 0 rgba(47, 107, 79, .6); animation: pulso 1.6s infinite; }
-@keyframes pulso { 70% { box-shadow: 0 0 0 10px rgba(47, 107, 79, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 107, 79, 0); } }
+.ponto-vivo { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--vivo-verde); margin-right: 10px; vertical-align: 3px; box-shadow: 0 0 0 0 rgba(47, 179, 106, .6); animation: pulso 1.6s infinite; }
+@keyframes pulso { 70% { box-shadow: 0 0 0 10px rgba(47, 179, 106, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 179, 106, 0); } }
 @media (prefers-reduced-motion: reduce) { .ponto-vivo { animation: none; } }
 .lista-agora { display: flex; flex-direction: column; gap: 16px; }
 .vivo { background: var(--cartao); border-radius: 18px; box-shadow: var(--sombra); border: 1px solid var(--linha); padding: 18px 20px 12px; }
@@ -37,7 +37,7 @@
 .acao { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; border: 0; background: transparent; border-radius: 10px; font: inherit; font-size: .95rem; font-weight: 700; color: var(--suave); cursor: pointer; }
 .acao:hover:not(:disabled) { background: var(--papel); color: var(--tinta); }
 .acao:focus-visible { outline: 3px solid var(--telha); outline-offset: -3px; }
-.acao.feito { color: var(--verde); cursor: default; }
+.acao.feito { color: var(--vivo-verde-texto); cursor: default; }
 .acao[aria-expanded="true"] { color: var(--telha); }
 .conta-n { font-size: .78rem; background: var(--papel); color: var(--tinta); border-radius: 999px; padding: 1px 8px; }
 
@@ -147,7 +147,7 @@
 .ev-corpo .onde { font-size: .88rem; color: var(--suave); }
 .ev-corpo p { margin: 4px 0 0; font-size: .88rem; overflow-wrap: anywhere; }
 .ev-corpo .por { font-size: .76rem; color: var(--suave); margin-top: 4px; }
-.selo.ao-vivo { background: #e8f3e6; color: #2f5d2a; }
+.selo.ao-vivo { background: #e9f8ef; color: var(--vivo-verde-texto); }
 .dia-vazio { margin: 0; color: var(--suave); }
 .cal-dia .botao-primario { align-self: flex-start; }
 

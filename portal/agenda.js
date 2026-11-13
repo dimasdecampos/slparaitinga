@@ -106,7 +106,9 @@ $('#form-entrar').addEventListener('submit', async e => {
 document.querySelectorAll('[data-fechar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
 
 // ---------- dados ----------
+let ultimaCarga = 0;
 async function carregar() {
+  ultimaCarga = Date.now();
   try {
     // Busca os próximos dias (para "acontecendo agora" e a lista) e também o mês que está na tela.
     let de = new Date(Date.now() - 864e5), ate = new Date(Date.now() + DIAS_FRENTE * 864e5);
@@ -475,4 +477,4 @@ await carregar();
 if (location.hash === '#novo') abrirNovoEvento();
 setInterval(() => { if (!document.hidden) carregar(); }, 60_000);                      // atualiza confirmações e fotos
 setInterval(() => { if (!document.hidden) render(); }, 30_000);                        // move eventos para "acontecendo agora" na hora certa
-document.addEventListener('visibilitychange', () => { if (!document.hidden) carregar(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - ultimaCarga > 20_000) carregar(); });

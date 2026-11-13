@@ -8,6 +8,8 @@
   --telha: #c8452c;
   --telha-escura: #a53520;
   --verde: #2f6b4f;
+  --vivo-verde: #2fb36a;          /* "acontecendo agora": verde claro e vivo */
+  --vivo-verde-texto: #1d8a4b;    /* o mesmo tom, escuro o bastante para texto */
   --azul: #2c5f7c;
   --ouro: #f5b700;
   --sombra: 0 1px 2px rgba(29, 27, 24, .05), 0 6px 20px rgba(29, 27, 24, .06);
@@ -61,8 +63,8 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .link-seta { font-weight: 700; font-size: .92rem; text-decoration: none; color: var(--azul); white-space: nowrap; }
 .link-seta::after { content: " →"; }
 .link-seta:hover { text-decoration: underline; }
-.ponto-vivo { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--verde); flex: none; animation: pulso 1.6s infinite; }
-@keyframes pulso { 0% { box-shadow: 0 0 0 0 rgba(47, 107, 79, .55); } 70% { box-shadow: 0 0 0 9px rgba(47, 107, 79, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 107, 79, 0); } }
+.ponto-vivo { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--vivo-verde); flex: none; animation: pulso 1.6s infinite; }
+@keyframes pulso { 0% { box-shadow: 0 0 0 0 rgba(47, 179, 106, .55); } 70% { box-shadow: 0 0 0 9px rgba(47, 179, 106, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 179, 106, 0); } }
 @media (prefers-reduced-motion: reduce) { .ponto-vivo { animation: none; } }
 
 /* ---------- home: título + mapa compacto no topo ---------- */
@@ -83,15 +85,15 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .pino:hover text, .pino.sel text, .mapa.perto .pino text { opacity: 1; }
 .pino.tem-vivo { display: none; }
 .vivo-marca { cursor: pointer; }
-.vivo-marca .onda { fill: var(--verde); opacity: .35; transform-origin: 0 0; animation: onda 1.8s ease-out infinite; }
+.vivo-marca .onda { fill: var(--vivo-verde); opacity: .35; transform-origin: 0 0; animation: onda 1.8s ease-out infinite; }
 .vivo-marca .onda.b { animation-delay: .9s; }
 @keyframes onda { from { transform: scale(.5); opacity: .5; } to { transform: scale(3.4); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .vivo-marca .onda { animation: none; transform: scale(2); opacity: .2; } }
-.vivo-marca .nucleo { fill: var(--verde); stroke: #fff; stroke-width: 3; }
+.vivo-marca .nucleo { fill: var(--vivo-verde); stroke: #fff; stroke-width: 3; }
 .vivo-marca .balao rect, .vivo-marca .balao path { fill: var(--tinta); }
 .vivo-marca .balao { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .28)); transition: transform .15s; }
 .vivo-marca:hover .balao { transform: translateY(-3px); }
-.vivo-marca .b-agora { font: 700 10px var(--sans); letter-spacing: .1em; fill: #8fd0a9; }
+.vivo-marca .b-agora { font: 700 10px var(--sans); letter-spacing: .1em; fill: #7fe0a8; }
 .vivo-marca .b-titulo { font: 700 14.5px var(--sans); fill: #fff; }
 .vivo-marca .b-local { font: 500 11.5px var(--sans); fill: #cfc9bf; }
 
@@ -100,14 +102,14 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .mapa-zoom button:hover { background: var(--papel); }
 .lema { margin: 8px 0 0; color: var(--suave); }
 .vivo-lista { margin: 18px 0; display: grid; gap: 8px; }
-.vivo-titulo { display: flex; align-items: center; gap: 8px; margin: 0 0 2px; font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--verde); }
+.vivo-titulo { display: flex; align-items: center; gap: 8px; margin: 0 0 2px; font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--vivo-verde-texto); }
 .vivo-item { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--linha); background: #fff; transition: border-color .15s, transform .15s; }
-.vivo-item:hover, .vivo-item.sel { border-color: var(--verde); transform: translateX(2px); }
+.vivo-item:hover, .vivo-item.sel { border-color: var(--vivo-verde); transform: translateX(2px); }
 .vivo-item:focus-visible { outline: 3px solid var(--azul); }
 .vivo-item strong { display: block; font-size: 1.02rem; line-height: 1.25; }
 .vivo-item span { display: block; font-size: .85rem; color: var(--suave); }
 .vivo-item .tag-exemplo, .mapa-info .ao-vivo .tag-exemplo { display: inline-block; color: #7a5b00; font-size: .64rem; }
-.vivo-item .conf { color: var(--verde); font-weight: 700; }
+.vivo-item .conf { color: var(--vivo-verde-texto); font-weight: 700; }
 .tag-exemplo { display: inline-block; font-size: .64rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; background: #fff1c9; color: #7a5b00; padding: 1px 7px; border-radius: 6px; margin-left: 6px; vertical-align: 2px; }
 .vivo-nada { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--papel); font-size: .92rem; color: var(--suave); }
 .vivo-nada b { color: var(--tinta); }
@@ -117,7 +119,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .mapa-info h2 { font-size: 1.25rem; margin: 2px 30px 6px 0; }
 .mapa-info p { margin: 0; font-size: .92rem; color: var(--suave); }
 .mapa-info .fechar { position: absolute; right: 10px; top: 8px; width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--papel); font-size: 1.2rem; cursor: pointer; }
-.mapa-info .ao-vivo { margin-top: 12px; padding: 12px; border-radius: 14px; background: #e8f3e6; border: 1px solid #bfdcc4; }
+.mapa-info .ao-vivo { margin-top: 12px; padding: 12px; border-radius: 14px; background: #e9f8ef; border: 1px solid #b6e6c9; }
 .mapa-info .ao-vivo .vivo-titulo { margin-bottom: 4px; }
 .mapa-info .ao-vivo strong { display: block; font-size: 1.05rem; line-height: 1.25; }
 .mapa-info .ao-vivo span { font-size: .85rem; color: var(--suave); display: block; }
@@ -277,3 +279,4 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .festa-pagina p { line-height: 1.65; }
 .festa-quando { padding: 14px 18px; background: var(--cartao); border-radius: 16px; box-shadow: var(--sombra); }
 .veja-tambem { padding-left: 1.2em; }
+.festa-quando .contagem { display: inline-block; margin-left: 8px; font-weight: 700; font-size: .85rem; background: var(--papel); padding: 3px 10px; border-radius: 999px; }

@@ -33,11 +33,14 @@ const pedido = new URLSearchParams(location.search).get('lugar');
 const mapa = svgTexto ? montarMapa() : null;
 apiPronta.then(a => { api = a; demo = a?.modo === 'demo'; return atualizar(true); });
 setInterval(() => { if (!document.hidden) atualizar(false); }, 60_000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) atualizar(false); });
+// Ao voltar para a aba, atualiza, mas não se a última busca foi há pouco (evita buscar duas vezes ao abrir).
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - ultimaBusca > 20_000) atualizar(false); });
 
 if (pedido && mapa) { const p = pontos.find(x => x.slug === pedido); if (p) { mapa.focar(p.x, p.y, 520); mapa.abrirInfo(p); $('#mapa').scrollIntoView({ block: 'start' }); } }
 
+let ultimaBusca = 0;
 async function atualizar(primeira) {
+  ultimaBusca = Date.now();
   if (api) {
     try {
       eventos = await api.listarEventos(new Date(Date.now() - 864e5), new Date(Date.now() + 30 * 864e5));
