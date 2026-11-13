@@ -76,8 +76,10 @@ function quando(iso) {
   const n = Math.round((b - a) / 864e5);
   return `${n === 0 ? 'hoje' : n === 1 ? 'amanhã' : d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}${hora(d) === '00:00' ? '' : ` às ${hora(d)}`}`;
 }
+const FERIADO_NACIONAL = /^(dia da consci[eê]ncia negra|dia do trabalho(?:ador)?|tiradentes|independ[eê]ncia do brasil|(?:dia da )?proclama[cç][aã]o da rep[uú]blica|finados|dia de finados|nossa senhora aparecida|confraterniza[cç][aã]o universal|ano novo|natal|sexta-feira santa)$/i;
 function renderProximos() {
-  const prox = eventos.filter(e => new Date(e.inicio) > Date.now()).slice(0, 5);
+  // Feriados nacionais ficam só na agenda: na home entram os eventos da cidade.
+  const prox = eventos.filter(e => new Date(e.inicio) > Date.now() && !FERIADO_NACIONAL.test(e.titulo)).slice(0, 5);
   $('#proximos').innerHTML = prox.length ? prox.map(e => {
     const d = new Date(e.inicio);
     return `<li><a href="agenda.html"><div class="dia-bloco"><b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></div><div><strong>${esc(e.titulo)}</strong><span>${diaTodo(e) ? 'Dia todo' : hora(d)} · ${esc(e.local)}</span></div></a></li>`;
