@@ -1,4 +1,5 @@
 import { criarBackend, CATEGORIAS, janelaAberta, acontecendo, encerrado } from './backend.js';
+import { ligarSugestoes } from './sugestoes.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -478,3 +479,6 @@ if (location.hash === '#novo') abrirNovoEvento();
 setInterval(() => { if (!document.hidden) carregar(); }, 60_000);                      // atualiza confirmações e fotos
 setInterval(() => { if (!document.hidden) render(); }, 30_000);                        // move eventos para "acontecendo agora" na hora certa
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - ultimaCarga > 20_000) carregar(); });
+
+// Sugestões de lugar iguais no notebook e no celular (no lugar do <datalist> nativo).
+ligarSugestoes(document.querySelector('#form-evento [name=local]'));

@@ -1,6 +1,7 @@
 // Painel /admin: agenda, festas e usuários.
 // Quem pode o quê é decidido no banco (RLS e funções em supabase/admin.sql); aqui só escondemos o que a pessoa não pode usar.
 import { CATEGORIAS } from './backend.js';
+import { ligarSugestoes } from './sugestoes.js';
 
 const cfg = window.AGENDA_CONFIG || {};
 const $ = s => document.querySelector(s);
@@ -278,4 +279,5 @@ app.addEventListener('click', async e => {
 });
 
 document.querySelectorAll('[data-fechar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+ligarSugestoes(document.querySelector('#form-ev [name=local]')); // sugestões de lugar iguais no notebook e no celular
 await iniciar();

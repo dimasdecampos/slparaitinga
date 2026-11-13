@@ -209,3 +209,11 @@
   .registro { flex-basis: 170px; }
   .registro img { width: 170px; height: 128px; }
 }
+
+/* sugestões de lugar (sugestoes.js): iguais no notebook e no celular */
+.sug-caixa { position: relative; }
+.sug-caixa > input { width: 100%; }
+.sug-lista { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--linha); border-radius: 10px; box-shadow: var(--sombra-alta); max-height: 232px; overflow-y: auto; overscroll-behavior: contain; }
+.sug-lista[hidden] { display: none; }
+.sug-lista li { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-weight: 400; font-size: .95rem; min-height: 44px; display: flex; align-items: center; }
+.sug-lista li:hover, .sug-lista li[aria-selected="true"] { background: var(--papel); }
