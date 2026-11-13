@@ -1,0 +1,265 @@
+[
+ {
+  "id": "festival-de-marchinhas",
+  "nome": "Festival de Marchinhas “Nhô Frade”",
+  "resumo": "Concurso de marchinhas inéditas que abre a temporada de Carnaval. Leva o nome do músico luizense Álvaro José Frade.",
+  "olho": "Antes do Carnaval",
+  "lema": "O concurso que escolhe as músicas que vão tocar nas ruas.",
+  "chita": "amarela",
+  "data_tipo": "livre",
+  "pascoa_ini": null,
+  "pascoa_fim": null,
+  "fixa_ini": null,
+  "fixa_fim": null,
+  "quando_texto": "Em janeiro, antes do Carnaval",
+  "secoes": [
+   {
+    "titulo": "O que é",
+    "paragrafos": [
+     "O Festival de Marchinhas “Nhô Frade” é um concurso de marchinhas inéditas, compostas por gente da cidade e da região. As canções vencedoras ganham as ruas no Carnaval seguinte.",
+     "O nome homenageia o músico luizense Álvaro José Frade, o “Nhô Frade”."
+    ]
+   },
+   {
+    "titulo": "Por que importa",
+    "paragrafos": [
+     "A marchinha é o coração do Carnaval de São Luiz do Paraitinga. O festival mantém viva a prática de compor para a própria festa, com letras que brincam com a vida da cidade."
+    ]
+   },
+   {
+    "titulo": "Como participar",
+    "paragrafos": [
+     "Moradores e visitantes podem assistir às apresentações. Inscrições e regulamento são divulgados pela Prefeitura e pelos organizadores; confirme as datas antes de ir."
+    ]
+   }
+  ],
+  "veja": [
+   "carnaval-de-marchinhas"
+  ],
+  "ordem": 1,
+  "publicada": true,
+  "atualizado_em": "2026-11-13T20:35:24.650053+00:00",
+  "atualizado_por": null
+ },
+ {
+  "id": "carnaval-de-marchinhas",
+  "nome": "Carnaval de Marchinhas",
+  "resumo": "Blocos, bonecões e marchinhas compostas na própria cidade tomam as ruas do centro histórico. A chita é a marca registrada das fantasias.",
+  "olho": "Fevereiro ou março",
+  "lema": "Marchinhas compostas na cidade, bonecões e muita chita pelas ruas do centro histórico.",
+  "chita": "vermelha",
+  "data_tipo": "pascoa",
+  "pascoa_ini": -51,
+  "pascoa_fim": -47,
+  "fixa_ini": null,
+  "fixa_fim": null,
+  "quando_texto": "",
+  "secoes": [
+   {
+    "titulo": "O Carnaval da cidade",
+    "paragrafos": [
+     "O Carnaval de São Luiz do Paraitinga é de rua e de marchinha. Blocos desfilam pelo centro histórico ao som de músicas feitas pelos próprios luizenses, e a chita colorida é a marca das fantasias.",
+     "Os bonecões, figuras gigantes carregadas pelos foliões, fazem parte do cortejo e da identidade da festa."
+    ]
+   },
+   {
+    "titulo": "Um pouco de história",
+    "paragrafos": [
+     "A marchinha de Carnaval nasceu no Rio de Janeiro no início do século XX e se espalhou pelo país. Em São Luiz do Paraitinga ela ganhou jeito próprio: em vez de só tocar sucessos antigos, a cidade passou a compor as suas, e hoje o Festival de Marchinhas abre a temporada todo ano.",
+     "Depois da enchente de 2010, que atingiu o centro histórico, o Carnaval seguiu como um dos símbolos da retomada da cidade."
+    ]
+   },
+   {
+    "titulo": "Quando acontece",
+    "paragrafos": [
+     "O Carnaval varia de ano para ano porque depende da Páscoa: começa cerca de 47 dias antes dela. A programação costuma cobrir de sexta a terça-feira. A Prefeitura divulga os blocos e horários perto da data."
+    ]
+   },
+   {
+    "titulo": "Dicas",
+    "paragrafos": [
+     "O centro é pequeno e se faz a pé. A cidade lota, então reserve hospedagem com antecedência e confirme a programação oficial."
+    ]
+   }
+  ],
+  "veja": [
+   "festival-de-marchinhas"
+  ],
+  "ordem": 2,
+  "publicada": true,
+  "atualizado_em": "2026-11-13T20:35:24.650053+00:00",
+  "atualizado_por": null
+ },
+ {
+  "id": "semana-santa",
+  "nome": "Semana Santa",
+  "resumo": "Procissões e celebrações pelas ruas do centro histórico.",
+  "olho": "Março ou abril",
+  "lema": "Procissões e celebrações pelas ruas do centro histórico.",
+  "chita": "azul",
+  "data_tipo": "pascoa",
+  "pascoa_ini": -7,
+  "pascoa_fim": 0,
+  "fixa_ini": null,
+  "fixa_fim": null,
+  "quando_texto": "",
+  "secoes": [
+   {
+    "titulo": "A Semana Santa na cidade",
+    "paragrafos": [
+     "Entre o Domingo de Ramos e o Domingo de Páscoa, as igrejas do centro histórico recebem celebrações, e as procissões percorrem as ruas ao entardecer e à noite, com a cidade em silêncio e respeito."
+    ]
+   },
+   {
+    "titulo": "Tradição católica no Vale do Paraíba",
+    "paragrafos": [
+     "São Luiz do Paraitinga nasceu como vila católica e mantém as devoções de origem portuguesa. A Matriz de São Luís de Tolosa, reconstruída depois da enchente de 2010, é o centro das celebrações."
+    ]
+   },
+   {
+    "titulo": "Quando acontece",
+    "paragrafos": [
+     "A Páscoa é móvel (primeiro domingo depois da primeira lua cheia do outono no hemisfério sul), então a semana muda a cada ano. Confira os horários das celebrações com a paróquia."
+    ]
+   }
+  ],
+  "veja": [
+   "festa-do-divino"
+  ],
+  "ordem": 3,
+  "publicada": true,
+  "atualizado_em": "2026-11-13T20:35:24.650053+00:00",
+  "atualizado_por": null
+ },
+ {
+  "id": "festa-do-divino",
+  "nome": "Festa do Divino Espírito Santo",
+  "resumo": "Bandeiras do Divino, congadas, moçambiques, cavalhada e o afogado servido a todos. Termina no domingo de Pentecostes.",
+  "olho": "Maio ou junho",
+  "lema": "Bandeiras do Divino, congadas, moçambiques, cavalhada e o afogado servido a todos.",
+  "chita": "azul",
+  "data_tipo": "pascoa",
+  "pascoa_ini": 40,
+  "pascoa_fim": 49,
+  "fixa_ini": null,
+  "fixa_fim": null,
+  "quando_texto": "",
+  "secoes": [
+   {
+    "titulo": "A maior festa da cidade",
+    "paragrafos": [
+     "A Festa do Divino Espírito Santo reúne fé, música e comida por cerca de dez dias, terminando no domingo de Pentecostes. É a festa que mais traz gente de fora.",
+     "Ao longo da festa saem as bandeiras do Divino, passam grupos de congada e moçambique, acontece a cavalhada e se serve o afogado, prato típico preparado para todos."
+    ]
+   },
+   {
+    "titulo": "Origem",
+    "paragrafos": [
+     "A devoção ao Divino Espírito Santo veio de Portugal com os colonizadores e se espalhou por todo o Brasil, ligada à tradição da rainha Isabel de Portugal. No interior paulista, ganhou elementos próprios: as congadas e moçambiques trazem a herança africana e se misturam às procissões e aos festeiros."
+    ]
+   },
+   {
+    "titulo": "Quando acontece",
+    "paragrafos": [
+     "A festa começa 40 dias depois da Páscoa, na Ascensão, e vai até Pentecostes, 49 dias depois. Por isso a data muda todo ano."
+    ]
+   },
+   {
+    "titulo": "Dicas",
+    "paragrafos": [
+     "Chegue cedo, use calçado confortável e reserve hospedagem com bastante antecedência. Confirme a programação com a organização."
+    ]
+   }
+  ],
+  "veja": [
+   "semana-santa",
+   "sao-luis-de-tolosa"
+  ],
+  "ordem": 4,
+  "publicada": true,
+  "atualizado_em": "2026-11-13T20:35:24.650053+00:00",
+  "atualizado_por": null
+ },
+ {
+  "id": "sao-luis-de-tolosa",
+  "nome": "Festa de São Luís de Tolosa",
+  "resumo": "Dia do padroeiro da cidade, celebrado na Igreja Matriz.",
+  "olho": "19 de agosto",
+  "lema": "O dia do padroeiro da cidade, celebrado na Igreja Matriz.",
+  "chita": "amarela",
+  "data_tipo": "fixa",
+  "pascoa_ini": null,
+  "pascoa_fim": null,
+  "fixa_ini": "08-19",
+  "fixa_fim": "08-19",
+  "quando_texto": "",
+  "secoes": [
+   {
+    "titulo": "Quem foi São Luís de Tolosa",
+    "paragrafos": [
+     "Luís de Anjou (1274–1297) foi um príncipe que renunciou ao trono para ser frade franciscano e bispo de Toulouse, na França. Morreu muito jovem e foi canonizado em 1317. Sua festa litúrgica é em 19 de agosto."
+    ]
+   },
+   {
+    "titulo": "A festa na cidade",
+    "paragrafos": [
+     "São Luiz do Paraitinga leva o nome do santo. No dia 19 de agosto há missas e celebrações na Igreja Matriz, que fica na praça central."
+    ]
+   },
+   {
+    "titulo": "A Matriz",
+    "paragrafos": [
+     "A Igreja Matriz de São Luís de Tolosa foi atingida pela cheia do rio na virada de 2009 para 2010 e depois reconstruída com a mobilização da comunidade. Veja mais em [História](historia.html)."
+    ]
+   }
+  ],
+  "veja": [
+   "festa-do-divino"
+  ],
+  "ordem": 5,
+  "publicada": true,
+  "atualizado_em": "2026-11-13T20:35:24.650053+00:00",
+  "atualizado_por": null
+ },
+ {
+  "id": "festa-do-saci",
+  "nome": "Festa do Saci",
+  "resumo": "Em 31 de outubro a cidade celebra o folclore brasileiro e a tradição caipira.",
+  "olho": "31 de outubro",
+  "lema": "A cidade celebra o folclore brasileiro e a tradição caipira.",
+  "chita": "vermelha",
+  "data_tipo": "fixa",
+  "pascoa_ini": null,
+  "pascoa_fim": null,
+  "fixa_ini": "10-31",
+  "fixa_fim": "10-31",
+  "quando_texto": "",
+  "secoes": [
+   {
+    "titulo": "Quem é o Saci",
+    "paragrafos": [
+     "O Saci-Pererê é um dos personagens mais conhecidos do folclore brasileiro: um menino de uma perna só, com gorro vermelho e cachimbo, que apronta travessuras e some em redemoinhos. Tem origem nas lendas indígenas do sul do país e ganhou traços africanos e europeus ao longo do tempo."
+    ]
+   },
+   {
+    "titulo": "Por que 31 de outubro",
+    "paragrafos": [
+     "A data aproxima o Saci do Halloween e propõe uma resposta brasileira: em vez de bruxas e abóboras, o Saci, a Mula sem Cabeça e o Curupira. O escritor Monteiro Lobato, que viveu no Vale do Paraíba, ajudou a popularizar o personagem no início do século XX."
+    ]
+   },
+   {
+    "titulo": "Na cidade",
+    "paragrafos": [
+     "A Festa do Saci reúne atividades culturais e brincadeiras que valorizam o folclore e a cultura caipira da região. A programação é divulgada pela Prefeitura."
+    ]
+   }
+  ],
+  "veja": [
+   "carnaval-de-marchinhas"
+  ],
+  "ordem": 6,
+  "publicada": true,
+  "atualizado_em": "2026-11-13T20:35:24.650053+00:00",
+  "atualizado_por": null
+ }
+]

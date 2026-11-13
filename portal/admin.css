@@ -1,0 +1,77 @@
+/* Painel /admin. Usa as cores e componentes de site.css e agenda.css (diálogos, botões, toast). */
+.admin-topo { background: var(--cartao); border-bottom: 1px solid var(--linha); }
+.admin-topo-in { display: flex; align-items: center; gap: 12px 28px; flex-wrap: wrap; padding-block: 18px; }
+.admin-topo h1 { font-size: 1.5rem; }
+.abas { display: flex; gap: 4px; }
+.abas[hidden], .abas [hidden] { display: none; }
+.abas a { text-decoration: none; font-weight: 700; color: var(--suave); padding: 8px 14px; border-radius: 999px; }
+.abas a:hover { color: var(--tinta); background: var(--papel); }
+.abas a[aria-current="page"] { background: var(--tinta); color: #fff; }
+.admin-conta { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: .9rem; }
+.admin-conta small { display: block; color: var(--suave); font-size: .76rem; }
+.admin-corpo { padding-block: 26px 60px; min-height: 60vh; }
+
+.avatar { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--telha); color: #fff; font-size: .74rem; font-weight: 800; }
+.barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.barra h2 { font-size: 1.6rem; }
+.filtros-admin { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.filtros-admin input[type=search] { flex: 1 1 260px; font: inherit; padding: 9px 14px; border: 1px solid var(--linha); border-radius: 999px; background: var(--cartao); }
+.aviso-admin { background: #fff8e1; border: 1px solid #f3dc9a; border-radius: 12px; padding: 10px 14px; font-size: .9rem; margin: 0 0 16px; }
+.carregando, .vazio { color: var(--suave); }
+.vazio { background: var(--cartao); border-radius: 14px; padding: 20px; text-align: center; }
+.cartao-centro { max-width: 460px; margin: 40px auto; background: var(--cartao); border-radius: 18px; box-shadow: var(--sombra); padding: 28px; display: grid; gap: 14px; text-align: center; }
+.cartao-centro p { margin: 0; color: var(--suave); }
+.linha-email { display: flex; gap: 8px; }
+.linha-email input { flex: 1; min-width: 0; font: inherit; padding: 9px 12px; border: 1px solid var(--linha); border-radius: 10px; }
+
+/* tabelas (viram cartões no celular) */
+.tabela { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--cartao); border-radius: 14px; box-shadow: var(--sombra); overflow: hidden; font-size: .92rem; }
+.tabela th { text-align: left; font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); padding: 10px 14px; border-bottom: 1px solid var(--linha); }
+.tabela td { padding: 12px 14px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela td b { display: block; }
+.tabela td small { display: block; color: var(--suave); }
+.tabela tr.apagado td { opacity: .6; }
+.tabela select, .tabela input { font: inherit; padding: 6px 9px; border: 1px solid var(--linha); border-radius: 8px; background: #fff; }
+.tabela .pessoa { display: flex; align-items: center; gap: 10px; }
+.tabela .pessoa input { width: 100%; max-width: 240px; font-weight: 700; }
+.acoes-linha { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.acoes-linha .botao-sec, .acoes-linha .btn { padding: 6px 12px; font-size: .85rem; text-decoration: none; }
+.perigo { color: #b3261e !important; }
+.botao-primario.perigo { background: #b3261e; color: #fff !important; }
+.tag { display: inline-block; margin: 4px 6px 0 0; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+.tag-cinza { background: var(--papel); color: var(--suave); border: 1px solid var(--linha); }
+.tag-vermelha { background: #fdecea; color: #b3261e; }
+@media (max-width: 760px) {
+  .tabela thead { display: none; }
+  .tabela, .tabela tbody, .tabela tr, .tabela td { display: block; }
+  .tabela tr { border-bottom: 1px solid var(--linha); padding: 8px 0; }
+  .tabela td { border: 0; padding: 6px 14px; }
+  .tabela td[data-rotulo]::before { content: attr(data-rotulo); display: block; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
+  .acoes-linha { justify-content: flex-start; }
+  .admin-conta { margin-left: 0; width: 100%; }
+}
+
+/* festas */
+.cards-festas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cards-festas li { display: flex; align-items: center; gap: 14px; background: var(--cartao); border-radius: 14px; box-shadow: var(--sombra); padding: 12px 14px; flex-wrap: wrap; }
+.cards-festas li > div:first-of-type { flex: 1; min-width: 200px; }
+.cards-festas small { display: block; color: var(--suave); font-size: .82rem; }
+.amostra { flex: 0 0 48px; height: 48px; border-radius: 10px; background: var(--chita) 0 0 / 70px; }
+.dialogo-largo { width: min(820px, calc(100vw - 32px)); }
+.dialogo .linha:has(> :nth-child(2):last-child) { grid-template-columns: 1fr 1fr; }
+.dialogo .linha small { grid-column: 1 / -1; color: var(--suave); font-weight: 400; }
+.dialogo .check { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
+.dialogo .check input { width: auto; }
+.grupo { border: 1px solid var(--linha); border-radius: 12px; padding: 12px 14px 14px; display: grid; gap: 10px; margin: 0; }
+.grupo legend { font-weight: 800; font-size: .9rem; padding: 0 6px; }
+.grupo [hidden] { display: none; }
+.radios, .checks { display: flex; gap: 6px 18px; flex-wrap: wrap; }
+.prefixo { display: flex; align-items: center; gap: 4px; font-weight: 400; color: var(--suave); }
+.prefixo input { flex: 1; min-width: 0; }
+.secao-ed { border: 1px solid var(--linha); border-radius: 10px; padding: 10px; margin: 0 0 10px; display: grid; gap: 8px; background: var(--papel); }
+.secao-topo-ed { display: flex; gap: 8px; align-items: center; }
+.secao-topo-ed input { flex: 1; font-weight: 700 !important; }
+.icone-mini { border: 1px solid var(--linha); background: #fff; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-weight: 700; }
+.toast.erro { background: #b3261e; }
+@media (max-width: 640px) { .dialogo .linha { grid-template-columns: 1fr !important; } }

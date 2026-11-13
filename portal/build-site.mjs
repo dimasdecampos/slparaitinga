@@ -21,14 +21,25 @@ function pascoa(y) {
 }
 const mais = (d, n) => new Date(d.getTime() + n * 864e5);
 const fixa = (y, m, d) => new Date(Date.UTC(y, m - 1, d));
-const FESTAS = [
-  { id: 'festival-de-marchinhas', nome: 'Festival de Marchinhas “Nhô Frade”', chita: 'amarela', quando: 'Em janeiro, antes do Carnaval', texto: 'Concurso de marchinhas inéditas que abre a temporada de Carnaval. Leva o nome do músico luizense Álvaro José Frade.' },
-  { id: 'carnaval-de-marchinhas', nome: 'Carnaval de Marchinhas', chita: 'vermelha', datas: y => [mais(pascoa(y), -51), mais(pascoa(y), -47)], texto: 'Blocos, bonecões e marchinhas compostas na própria cidade tomam as ruas do centro histórico. A chita é a marca registrada das fantasias.' },
-  { id: 'semana-santa', nome: 'Semana Santa', chita: 'azul', datas: y => [mais(pascoa(y), -7), pascoa(y)], texto: 'Procissões e celebrações pelas ruas do centro histórico.' },
-  { id: 'festa-do-divino', nome: 'Festa do Divino Espírito Santo', chita: 'azul', datas: y => [mais(pascoa(y), 40), mais(pascoa(y), 49)], texto: 'Bandeiras do Divino, congadas, moçambiques, cavalhada e o afogado servido a todos. Termina no domingo de Pentecostes.' },
-  { id: 'sao-luis-de-tolosa', nome: 'Festa de São Luís de Tolosa', chita: 'amarela', datas: y => [fixa(y, 8, 19), fixa(y, 8, 19)], texto: 'Dia do padroeiro da cidade, celebrado na Igreja Matriz.' },
-  { id: 'festa-do-saci', nome: 'Festa do Saci', chita: 'vermelha', datas: y => [fixa(y, 10, 31), fixa(y, 10, 31)], texto: 'Em 31 de outubro a cidade celebra o folclore brasileiro e a tradição caipira.' },
-].map(f => {
+// Conexão pública do Supabase (a mesma chave "publishable" do site), lida de config.js.
+const CONFIG_JS = fs.readFileSync(aqui('./config.js'), 'utf8');
+const SUPABASE = (CONFIG_JS.match(/supabaseUrl:\s*'([^']+)'/) || [])[1];
+const SUPABASE_KEY = (CONFIG_JS.match(/supabaseKey:\s*'([^']+)'/) || [])[1];
+
+// As festas vêm do banco (painel /admin). A regra da data vira uma função: dias em relação à Páscoa ou dia fixo no ano.
+const { carregarFestas, gerar: gerarFestas } = await import('./festas-conteudo.mjs');
+const regraDatas = f => {
+  if (f.data_tipo === 'pascoa' && Number.isInteger(f.pascoa_ini)) return y => [mais(pascoa(y), f.pascoa_ini), mais(pascoa(y), f.pascoa_fim ?? f.pascoa_ini)];
+  if (f.data_tipo === 'fixa' && f.fixa_ini) {
+    const [mi, di] = f.fixa_ini.split('-').map(Number), [mf, df] = (f.fixa_fim || f.fixa_ini).split('-').map(Number);
+    return y => { const ini = fixa(y, mi, di); let fim = fixa(y, mf, df); if (fim < ini) fim = fixa(y + 1, mf, df); return [ini, fim]; };
+  }
+  return null;
+};
+const FESTAS = (await carregarFestas({ supabaseUrl: SUPABASE, supabaseKey: SUPABASE_KEY })).map(f => ({
+  id: f.id, nome: f.nome, chita: f.chita, texto: f.resumo, olho: f.olho, lema: f.lema, secoes: f.secoes, veja: f.veja,
+  quando: f.quando_texto || 'Data a confirmar', datas: regraDatas(f),
+})).map(f => {
   if (!f.datas) return f;
   let [ini, fim] = f.datas(HOJE.getUTCFullYear());
   if (isoDia(fim) < isoDia(HOJE)) [ini, fim] = f.datas(HOJE.getUTCFullYear() + 1);
@@ -55,7 +66,7 @@ function layout(p) {
   const rel = u => /^([a-z]+:|#|\/)/i.test(u) ? u : sobe + (u === './' ? '' : u);
   return html.replace(/(href|src)="([^"]*)"/g, (_, a, u) => a + '="' + rel(u) + '"').replace(/url\((img\/[^)]*)\)/g, (_, u) => 'url(' + sobe + u + ')');
 }
-function layoutBase({ arquivo, titulo, descricao, corpo, scripts = '', css = '', jsonld = [], migalha, dicas = "" }) {
+function layoutBase({ arquivo, titulo, descricao, corpo, scripts = '', css = '', jsonld = [], migalha, dicas = "", privada = false }) {
   const canon = URL_SITE ? `${URL_SITE}/${arquivo === 'index.html' ? '' : arquivo}` : '';
   const tituloCompleto = arquivo === 'index.html' ? titulo : `${titulo} · São Luiz do Paraitinga`;
   const ld = [...jsonld];
@@ -67,6 +78,7 @@ function layoutBase({ arquivo, titulo, descricao, corpo, scripts = '', css = '',
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(tituloCompleto)}</title>
 <meta name="description" content="${esc(descricao)}">
+${privada ? '<meta name="robots" content="noindex, nofollow">' : ''}
 ${canon ? `<link rel="canonical" href="${canon}">` : ''}
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
@@ -127,7 +139,6 @@ const avisoHTML = n => `<li><a href="${esc(n.link)}" target="_blank" rel="noopen
 // ---------- páginas ----------
 const paginas = [];
 // Dicas de carregamento: a agenda fala com o Supabase, então já abrimos a conexão e baixamos o módulo cedo.
-const SUPABASE = (fs.readFileSync(aqui('./config.js'), 'utf8').match(/supabaseUrl:\s*'([^']+)'/) || [])[1];
 const dicasAgenda = (extra = '') => (SUPABASE ? `<link rel="preconnect" href="${SUPABASE}" crossorigin>` : '') + '<link rel="modulepreload" href="backend.js">' + extra;
 
 paginas.push({
@@ -333,9 +344,65 @@ paginas.push({
 });
 
 // ---------- uma página para cada festa (SEO) ----------
-await import('./festas-conteudo.mjs').then(m => m.gerar({ paginas, FESTAS, cabecalhoPagina, esc, lugarLD }));
+gerarFestas({ paginas, FESTAS, cabecalhoPagina, esc, lugarLD });
+
+// ---------- painel /admin (fora do menu, do sitemap e dos buscadores) ----------
+const opcoesData = [['pascoa', 'Em relação à Páscoa'], ['fixa', 'Dia fixo no ano'], ['livre', 'Só texto']];
+paginas.push({
+  arquivo: 'admin/index.html', privada: true,
+  titulo: 'Painel',
+  descricao: 'Painel de administração do slparaitinga.',
+  css: '<link rel="stylesheet" href="agenda.css"><link rel="stylesheet" href="admin.css">',
+  dicas: dicasAgenda(),
+  scripts: '<script src="config.js"></script>\n<script type="module" src="admin.js"></script>',
+  corpo: `<div class="admin-topo"><div class="larg admin-topo-in">
+  <h1>Painel</h1>
+  <nav id="abas" class="abas" aria-label="Seções do painel" hidden><a href="#agenda">Agenda</a><a href="#festas">Festas</a><a href="#usuarios" data-so-admin hidden>Usuários</a></nav>
+  <div id="admin-conta" class="admin-conta"></div>
+</div></div>
+<section id="admin" class="larg admin-corpo" aria-live="polite"><p class="carregando">Carregando…</p></section>
+
+<dialog id="dlg-evento" class="dialogo"><form method="dialog" id="form-ev">
+  <h2 id="ev-titulo-dlg">Evento</h2>
+  <label>Título<input name="titulo" required minlength="3" maxlength="120"></label>
+  <label>Local<input name="local" required minlength="2" maxlength="120" list="locais-admin"></label>
+  <datalist id="locais-admin">${pontos.map(p => `<option value="${esc(p.nome)}">`).join('')}<option value="Centro histórico"></datalist>
+  <label>Tipo<select name="categoria"></select></label>
+  <div class="linha"><label>Começa<input name="inicio" type="datetime-local" required></label><label>Termina<input name="fim" type="datetime-local" required></label></div>
+  <label class="check"><input type="checkbox" id="ev-dia-todo"> Dia todo (00:00 a 23:59)</label>
+  <label>Detalhes<textarea name="descricao" rows="4" maxlength="2000"></textarea></label>
+  <p class="erro" role="alert"></p>
+  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar</button></div>
+</form></dialog>
+
+<dialog id="dlg-festa" class="dialogo dialogo-largo"><form method="dialog" id="form-festa">
+  <h2 id="festa-titulo-dlg">Festa</h2>
+  <div class="linha"><label>Nome<input name="nome" required minlength="2" maxlength="120"></label><label>Endereço da página<span class="prefixo">/festas/<input name="id_festa" required pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Só letras minúsculas, números e hífen" maxlength="80">.html</span></label></div>
+  <label>Resumo (aparece no cartão em Festas)<textarea name="resumo" rows="2" required maxlength="400"></textarea></label>
+  <div class="linha"><label>Linha acima do título<input name="olho" maxlength="60" placeholder="Ex.: Maio ou junho"></label><label>Estampa<select name="chita"></select></label><label>Ordem<input name="ordem" type="number" min="0" max="999"></label></div>
+  <label>Subtítulo<input name="lema" maxlength="200"></label>
+  <fieldset class="grupo"><legend>Quando acontece</legend>
+    <div class="radios">${opcoesData.map(([v, t]) => `<label class="check"><input type="radio" name="data_tipo" value="${v}"> ${t}</label>`).join('')}</div>
+    <div class="linha" data-campo-data="pascoa"><label>Começa (dias da Páscoa)<input name="pascoa_ini" type="number" min="-120" max="120"></label><label>Termina (dias da Páscoa)<input name="pascoa_fim" type="number" min="-120" max="120"></label><small>Negativo é antes da Páscoa. Ex.: Carnaval -51 a -47; Divino 40 a 49.</small></div>
+    <div class="linha" data-campo-data="fixa"><label>Começa<input name="fixa_ini" type="date"></label><label>Termina<input name="fixa_fim" type="date"></label><small>O ano é ignorado: a festa se repete todo ano nesse dia.</small></div>
+    <div data-campo-data="livre"><label>Texto da data<input name="quando_texto" maxlength="120" placeholder="Ex.: Em janeiro, antes do Carnaval"></label></div>
+  </fieldset>
+  <fieldset class="grupo"><legend>Conteúdo da página</legend><div id="secoes-ed"></div><button type="button" class="botao-sec" id="add-secao">+ Adicionar seção</button></fieldset>
+  <fieldset class="grupo"><legend>Veja também</legend><div id="veja-ed" class="checks"></div></fieldset>
+  <label class="check"><input type="checkbox" name="publicada"> Publicada (desmarque para deixar como rascunho)</label>
+  <p class="erro" role="alert"></p>
+  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar festa</button></div>
+</form></dialog>
+
+<dialog id="dlg-confirmar" class="dialogo"><form method="dialog">
+  <h2>Tem certeza?</h2><p id="confirmar-texto"></p>
+  <div class="acoes"><button value="cancelar" class="botao-sec">Cancelar</button><button value="ok" class="botao-primario perigo" id="confirmar-ok">Excluir</button></div>
+</form></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>`,
+});
 
 fs.mkdirSync(aqui('./festas'), { recursive: true });
+fs.mkdirSync(aqui('./admin'), { recursive: true });
 for (const p of paginas) fs.writeFileSync(aqui('./' + p.arquivo), layout(p));
 
 // ---------- arquivos de SEO ----------
@@ -344,9 +411,9 @@ fs.writeFileSync(aqui('./img/favicon.svg'), `<svg xmlns="http://www.w3.org/2000/
 fs.writeFileSync(aqui('./img/logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64" role="img" aria-label="slparaitinga">`
   + `<g transform="translate(32 32) scale(1.25)">${FLOR_DESENHO}</g>`
   + `<text x="72" y="43" font-family="'Plus Jakarta Sans', system-ui, 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="32" letter-spacing="-0.6" fill="#1d1b18">slparaitinga</text></svg>\n`);
-fs.writeFileSync(aqui('./robots.txt'), `User-agent: *\nAllow: /\n${URL_SITE ? `Sitemap: ${URL_SITE}/sitemap.xml\n` : ''}`);
+fs.writeFileSync(aqui('./robots.txt'), `User-agent: *\nAllow: /\nDisallow: /admin/\n${URL_SITE ? `Sitemap: ${URL_SITE}/sitemap.xml\n` : ''}`);
 if (URL_SITE) {
-  const urls = paginas.map(p => {
+  const urls = paginas.filter(p => !p.privada).map(p => {
     const freq = ['index.html', 'agenda.html'].includes(p.arquivo) ? 'hourly' : p.arquivo.startsWith('eventos/') ? 'monthly' : 'weekly';
     return `  <url><loc>${URL_SITE}/${p.arquivo === 'index.html' ? '' : p.arquivo}</loc><lastmod>${isoDia(HOJE)}</lastmod><changefreq>${freq}</changefreq></url>`;
   });
