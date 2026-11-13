@@ -9,8 +9,13 @@ export const ANTES = 30 * MIN, DEPOIS = 2 * HORA; // janela para confirmar e env
 export function janelaAberta(ev, agora = Date.now()) {
   return agora >= new Date(ev.inicio) - ANTES && agora <= +new Date(ev.fim) + DEPOIS;
 }
+// A comunidade avisa que acabou: 2 avisos "já terminou" e mais avisos do que confirmações.
+export function encerrado(ev) {
+  const n = Number(ev.encerramentos) || 0;
+  return n >= 2 && n > (Number(ev.confirmacoes) || 0);
+}
 export function acontecendo(ev, agora = Date.now()) {
-  return agora >= new Date(ev.inicio) - 15 * MIN && agora <= +new Date(ev.fim);
+  return !encerrado(ev) && agora >=new Date(ev.inicio) - 15 * MIN && agora <= +new Date(ev.fim);
 }
 
 export async function criarBackend() {
@@ -62,7 +67,12 @@ async function supabaseBackend(cfg) {
         const r = await sb.from('confirmacoes').select('evento_id').eq('usuario_id', perfil.id).in('evento_id', data.map(e => e.id));
         meus = new Set((r.data || []).map(x => x.evento_id));
       }
-      return data.map(e => ({ ...e, eu_confirmei: meus.has(e.id) }));
+      let meusFim = new Set();
+      if (perfil && data.length) {
+        const r = await sb.from('encerramentos').select('evento_id').eq('usuario_id', perfil.id).in('evento_id', data.map(e => e.id));
+        meusFim = new Set((r.data || []).map(x => x.evento_id));
+      }
+      return data.map(e => ({ ...e, eu_confirmei: meus.has(e.id), eu_encerrei: meusFim.has(e.id) }));
     },
     async criarEvento(ev) {
       const { error } = await sb.from('eventos').insert(ev);
@@ -72,6 +82,11 @@ async function supabaseBackend(cfg) {
       const { error } = await sb.from('confirmacoes').insert({ evento_id: id });
       if (error?.code === '23505') return; // já confirmado
       falhou(error, 'Não foi possível confirmar.');
+    },
+    async encerrar(id) {
+      const { error } = await sb.from('encerramentos').insert({ evento_id: id });
+      if (error?.code === '23505') return; // já avisou
+      falhou(error, 'Não foi possível enviar o aviso.');
     },
     async listarRegistros(ids) {
       if (!ids.length) return [];
@@ -134,7 +149,8 @@ function demoBackend() {
         .map(e => {
           const c = db.confirmacoes.filter(x => x.evento_id === e.id);
           return { ...e, confirmacoes: c.length, ultima_confirmacao: c.map(x => x.criado_em).sort().pop() || null,
-            registros: db.registros.filter(r => r.evento_id === e.id).length, eu_confirmei: !!eu() && c.some(x => x.usuario_id === eu().id) };
+            registros: db.registros.filter(r => r.evento_id === e.id).length, eu_confirmei: !!eu() && c.some(x => x.usuario_id === eu().id),
+            encerramentos: (db.encerramentos || []).filter(x => x.evento_id === e.id).length, eu_encerrei: !!eu() && (db.encerramentos || []).some(x => x.evento_id === e.id && x.usuario_id === eu().id) };
         });
     },
     async criarEvento(ev) {
@@ -146,6 +162,13 @@ function demoBackend() {
       if (!eu()) throw new Error('Entre para confirmar.');
       if (!ev || !janelaAberta(ev)) throw new Error('Só dá para confirmar enquanto o evento está acontecendo.');
       if (!db.confirmacoes.some(c => c.evento_id === id && c.usuario_id === eu().id)) { db.confirmacoes.push({ evento_id: id, usuario_id: eu().id, criado_em: new Date().toISOString() }); gravar(db); }
+    },
+    async encerrar(id) {
+      const ev = db.eventos.find(e => e.id === id);
+      if (!eu()) throw new Error('Entre para avisar.');
+      if (!ev || !janelaAberta(ev)) throw new Error('Só dá para avisar enquanto o evento está acontecendo.');
+      db.encerramentos = db.encerramentos || [];
+      if (!db.encerramentos.some(c => c.evento_id === id && c.usuario_id === eu().id)) { db.encerramentos.push({ evento_id: id, usuario_id: eu().id, criado_em: new Date().toISOString() }); gravar(db); }
     },
     async listarRegistros(ids) {
       return db.registros.filter(r => ids.includes(r.evento_id)).sort((a, b) => b.criado_em.localeCompare(a.criado_em))

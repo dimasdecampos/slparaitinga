@@ -1,4 +1,4 @@
-import { criarBackend, CATEGORIAS, janelaAberta, acontecendo } from './backend.js';
+import { criarBackend, CATEGORIAS, janelaAberta, acontecendo, encerrado } from './backend.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -120,7 +120,7 @@ async function carregar() {
 // ---------- renderização ----------
 function render() {
   const agora = Date.now();
-  const vivos = eventos.filter(e => acontecendo(e, agora) || (janelaAberta(e, agora) && new Date(e.inicio) <= agora));
+  const vivos = eventos.filter(e => !encerrado(e) && (acontecendo(e, agora) || (janelaAberta(e, agora) && new Date(e.inicio) <= agora)));
   const vivosIds = new Set(vivos.map(e => e.id));
   const u = api.usuario();
 
@@ -141,7 +141,11 @@ function render() {
           ? `<button type="button" class="botao-primario ja" disabled>✔ Você confirmou</button>`
           : `<button type="button" class="botao-primario" data-acao="confirmar">✋ Está acontecendo</button>`}
         <button type="button" class="botao-sec" data-acao="foto">📷 Enviar foto</button>
+        ${e.eu_encerrei
+          ? `<button type="button" class="botao-sec" disabled>🏁 Você avisou que terminou</button>`
+          : `<button type="button" class="botao-sec" data-acao="encerrar">🏁 Já terminou</button>`}
       </div>
+      ${e.encerramentos ? `<p class="meta">${e.encerramentos} ${e.encerramentos === 1 ? 'pessoa avisou' : 'pessoas avisaram'} que já terminou. Com 2 avisos o evento sai de “Acontecendo agora”.</p>` : ''}
       ${regs.length ? `<div class="fotos">${regs.map(r => registroHTML(r, u)).join('')}</div>` : ''}
     </article>`;
   }).join('') : `<p class="nada-agora">Nenhum evento acontecendo neste momento. Sabe de algo rolando? <a href="#" data-acao="novo">Adicione na agenda</a>.</p>`;
@@ -271,11 +275,18 @@ document.addEventListener('click', async e => {
     if (!exigirLogin(() => confirmar(id))) return;
     confirmar(id);
   }
+  if (acao === 'encerrar') {
+    if (!exigirLogin(() => encerrar(id))) return;
+    encerrar(id);
+  }
   if (acao === 'foto') {
     if (!exigirLogin(() => abrirFoto(id))) return;
     abrirFoto(id);
   }
 });
+async function encerrar(id) {
+  try { await api.encerrar(id); toast('Obrigado! O aviso ajuda a manter a agenda certa.'); await carregar(); } catch (err) { toast(err.message); }
+}
 async function confirmar(id) {
   try { await api.confirmar(id); toast('Valeu! Sua confirmação ajuda quem está em casa.'); await carregar(); } catch (err) { toast(err.message); }
 }
