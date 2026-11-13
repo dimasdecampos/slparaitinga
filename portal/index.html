@@ -44,37 +44,43 @@
   </div>
 </header>
 <main id="conteudo">
-<section class="hero" aria-labelledby="titulo">
-  <div id="mapa" class="mapa" role="application" aria-label="Mapa da cidade. Arraste para mover e use os botões para aproximar."></div>
-  <div class="mapa-zoom"><button type="button" data-zoom="in" aria-label="Aproximar">+</button><button type="button" data-zoom="out" aria-label="Afastar">−</button><button type="button" data-zoom="reset" aria-label="Voltar à vista inicial">⌂</button></div>
-  <article id="mapa-info" class="mapa-info" hidden aria-live="polite"></article>
-  <div class="hero-painel">
-    <p class="olho">Vale do Paraíba · São Paulo</p>
-    <h1 id="titulo">São Luiz do Paraitinga</h1>
-    <p class="lema">O que está acontecendo na cidade, ao vivo no mapa.</p>
+<section class="hero larg" aria-labelledby="titulo">
+  <div class="hero-grade">
+    <div class="hero-texto">
+      <p class="olho">Vale do Paraíba · São Paulo</p>
+      <h1 id="titulo">São Luiz do Paraitinga</h1>
+      <p class="lema">O que está acontecendo na cidade, ao vivo no mapa.</p>
+      <div class="painel-acoes"><a class="btn" href="agenda.html">Agenda completa</a><a class="btn btn-sec" href="agenda.html#novo">Avisar um evento</a></div>
+    </div>
+    <div class="mapa-caixa">
+      <div id="mapa" class="mapa" role="application" aria-label="Mapa da cidade. Arraste para mover e use os botões para aproximar."></div>
+      <div class="mapa-zoom"><button type="button" data-zoom="in" aria-label="Aproximar">+</button><button type="button" data-zoom="out" aria-label="Afastar">−</button><button type="button" data-zoom="reset" aria-label="Voltar à vista inicial">⌂</button></div>
+      <article id="mapa-info" class="mapa-info" hidden aria-live="polite"></article>
+    </div>
     <div id="vivo" class="vivo-lista" aria-live="polite"><p class="carregando">Carregando a agenda…</p></div>
-    <div class="painel-acoes"><a class="btn" href="agenda.html">Agenda completa</a><a class="btn btn-sec" href="agenda.html#novo">Avisar um evento</a></div>
   </div>
 </section>
 
-<section class="secao larg" aria-labelledby="t-prox">
-  <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2><a class="link-seta" href="agenda.html">Ver agenda</a></div>
-  <ul id="proximos" class="cartoes-evento"><li class="carregando">Carregando…</li></ul>
-</section>
+<div class="larg home-colunas">
+  <section class="secao" aria-labelledby="t-prox">
+    <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2><a class="link-seta" href="agenda.html">Ver calendário</a></div>
+    <ul id="proximos" class="cartoes-evento"><li class="carregando">Carregando…</li></ul>
+  </section>
+  <div class="coluna-lateral">
+    <section class="secao" aria-labelledby="t-festa">
+      <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
+      <a class="explore-card destaque" href="festas.html" style="--chita:url(img/chita-vermelha.svg)"><strong>Carnaval de Marchinhas</strong><span>5 de fevereiro a 9 de fevereiro de 2027</span><span class="contagem" data-contagem="2027-02-05" data-fim="2027-02-09"></span></a>
+    </section>
+  </div>
+</div>
 
 <section class="secao larg" aria-labelledby="t-explore">
   <div class="secao-topo"><h2 id="t-explore">Conheça a cidade</h2></div>
-  <div class="explore">
-    <a class="explore-card destaque" href="festas.html" style="--chita:url(img/chita-vermelha.svg)"><span class="selo">Próxima festa</span><strong>Carnaval de Marchinhas</strong><span>5 de fevereiro a 9 de fevereiro de 2027</span><span class="contagem" data-contagem="2027-02-05" data-fim="2027-02-09"></span></a>
+  <div class="explore explore-3">
     <a class="explore-card" href="lugares.html"><span class="selo">Lugares</span><strong>Praças, igrejas e o rio</strong><span>14 lugares para conhecer, todos no mapa.</span></a>
     <a class="explore-card" href="historia.html"><span class="selo">História</span><strong>De 1769 até hoje</strong><span>A vila à beira do rio, Oswaldo Cruz e a reconstrução depois de 2010.</span></a>
     <a class="explore-card" href="servicos.html"><span class="selo">Serviços</span><strong>Telefones, tempo e avisos</strong><span>Prefeitura, emergências e previsão para a semana.</span></a>
   </div>
-</section>
-
-<section class="secao larg" aria-labelledby="t-avisos">
-  <div class="secao-topo"><h2 id="t-avisos">Avisos da Prefeitura</h2><a class="link-seta" href="servicos.html#avisos">Ver todos</a></div>
-  <ul class="avisos"><li><a href="https://saoluizdoparaitinga.sp.gov.br/processo-seletivo-interno-para-diretores-de-escola-n-0012026" target="_blank" rel="noopener"><span class="selo">Educação</span><strong>Processo Seletivo Interno para Diretores de Escola nº 001/2026</strong><time datetime="2026-11-12T19:48:24.000Z">12 de novembro</time></a></li><li><a href="https://saoluizdoparaitinga.sp.gov.br/classificacao-final-pontuacao-professores-efetivos-da-rede-municipal-de-educacao-para-atribuicao-de-aulasclasses-do-ano-letivo-de-2027" target="_blank" rel="noopener"><span class="selo">Educação</span><strong>Classificação Final - Pontuação Professores Efetivos da Rede Municipal de Educação para atribuição de aulas/classes do ano letivo de 2027</strong><time datetime="2026-11-09T14:56:54.000Z">9 de novembro</time></a></li><li><a href="https://saoluizdoparaitinga.sp.gov.br/cardapio-alimentacao-escolar-novembro-de-2026" target="_blank" rel="noopener"><span class="selo">Educação</span><strong>Cardápio Alimentação Escolar - Novembro de 2026</strong><time datetime="2026-10-29T19:05:59.000Z">29 de outubro</time></a></li></ul>
 </section>
 </main>
 <footer class="rodape">

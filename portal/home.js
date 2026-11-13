@@ -7,6 +7,8 @@ const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
 const corta = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const hora = d => new Date(d).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const diaTodo = e => hora(e.inicio) === '00:00' && hora(e.fim) === '23:59'; // sem horário definido
+const ate = e => (diaTodo(e) ? 'dia todo' : `até ${hora(e.fim)}`);
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const CORES = { praca: '#2f6b4f', igreja: '#c8452c', cultura: '#b98900', servico: '#2c5f7c' };
 const TIPOS = { praca: 'Praça e natureza', igreja: 'Igreja', cultura: 'Cultura', servico: 'Serviço' };
@@ -51,7 +53,7 @@ function renderPainel() {
   if (vivos.length) {
     el.innerHTML = `<p class="vivo-titulo"><span class="ponto-vivo"></span>Acontecendo agora</p>` + vivos.map(e =>
       `<button type="button" class="vivo-item" data-ev="${e.id}"><strong>${esc(e.titulo)}${demo ? '<span class="tag-exemplo">exemplo</span>' : ''}</strong>
-        <span>${esc(e.local)} · até ${hora(e.fim)}</span>${e.confirmacoes ? `<span class="conf">✔ ${e.confirmacoes} ${e.confirmacoes === 1 ? 'pessoa confirmou' : 'pessoas confirmaram'}</span>` : ''}</button>`).join('')
+        <span>${esc(e.local)} · ${ate(e)}</span>${e.confirmacoes ? `<span class="conf">✔ ${e.confirmacoes} ${e.confirmacoes === 1 ? 'pessoa confirmou' : 'pessoas confirmaram'}</span>` : ''}</button>`).join('')
       + (demo ? '<p class="demo-nota">Demonstração: estes eventos são fictícios e somem quando a agenda for ligada ao banco de dados.</p>' : '');
   } else {
     const prox = eventos.find(e => new Date(e.inicio) > Date.now());
@@ -68,26 +70,27 @@ $('#vivo').addEventListener('click', e => {
 function quando(iso) {
   const d = new Date(iso), a = new Date(); a.setHours(0, 0, 0, 0); const b = new Date(d); b.setHours(0, 0, 0, 0);
   const n = Math.round((b - a) / 864e5);
-  return `${n === 0 ? 'hoje' : n === 1 ? 'amanhã' : d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })} às ${hora(d)}`;
+  return `${n === 0 ? 'hoje' : n === 1 ? 'amanhã' : d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}${hora(d) === '00:00' ? '' : ` às ${hora(d)}`}`;
 }
 function renderProximos() {
-  const prox = eventos.filter(e => new Date(e.inicio) > Date.now()).slice(0, 4);
+  const prox = eventos.filter(e => new Date(e.inicio) > Date.now()).slice(0, 5);
   $('#proximos').innerHTML = prox.length ? prox.map(e => {
     const d = new Date(e.inicio);
-    return `<li><a href="agenda.html"><div class="dia-bloco"><b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></div><div><strong>${esc(e.titulo)}</strong><span>${hora(d)} · ${esc(e.local)}</span></div></a></li>`;
+    return `<li><a href="agenda.html"><div class="dia-bloco"><b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></div><div><strong>${esc(e.titulo)}</strong><span>${diaTodo(e) ? 'Dia todo' : hora(d)} · ${esc(e.local)}</span></div></a></li>`;
   }).join('') : '<li class="carregando">Nenhum evento adicionado para os próximos dias. <a href="agenda.html#novo">Adicione o primeiro</a>.</li>';
 }
 
 // ---------------- mapa ----------------
 function montarMapa() {
-  const area = $('#mapa'), info = $('#mapa-info'), painel = document.querySelector('.hero-painel');
+  const area = $('#mapa'), info = $('#mapa-info');
   area.innerHTML = svgTexto;
   const svg = area.querySelector('svg'), NS = 'http://www.w3.org/2000/svg';
   const bv = svg.viewBox.baseVal, B = { x: bv.x, y: bv.y, w: bv.width, h: bv.height };
   svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
   const novo = (tag, attrs = {}, pai) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); pai?.append(el); return el; };
   const camadaPinos = novo('g', { id: 'g-pinos' }, svg), camadaVivos = novo('g', { id: 'g-vivos' }, svg);
-  const celular = () => getComputedStyle(painel).position !== 'absolute';
+  const celular = () => matchMedia('(max-width: 899px)').matches; // página em coluna única
+  const estreito = () => area.clientWidth < 620;                  // mapa pequeno: mostra uma área menor da cidade
 
   const pinos = pontos.map(p => {
     const g = novo('g', { class: 'pino', tabindex: 0, role: 'button', 'aria-label': p.nome, style: `--cor:${CORES[p.tipo] || '#6a655d'}` }, camadaPinos);
@@ -110,10 +113,10 @@ function montarMapa() {
     for (const { g, p } of marcas) g.setAttribute('transform', `translate(${p.x} ${p.y}) scale(${k})`);
     area.classList.toggle('perto', upp < 0.42);
   }
-  // centro da área livre do mapa (descontando o painel no computador), em pixels
+  // centro do mapa em pixels (um pouco abaixo do meio, para o balão do evento caber acima do pino)
   function centroLivre() {
-    const r = area.getBoundingClientRect(), esq = celular() ? 0 : painel.getBoundingClientRect().right - r.left;
-    return { cx: (esq + r.width) / 2, cy: r.height * 0.56, r };
+    const r = area.getBoundingClientRect();
+    return { cx: r.width / 2, cy: r.height * 0.56, r };
   }
   let garantia = 0;
   const pararAnim = () => { cancelAnimationFrame(anim); clearTimeout(garantia); };
@@ -141,8 +144,8 @@ function montarMapa() {
     if (comLugar.length) {
       const xs = comLugar.map(p => p.x), ys = comLugar.map(p => p.y);
       const larg = Math.max(...xs) - Math.min(...xs), alt = Math.max(...ys) - Math.min(...ys);
-      focar((Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2 - 20, Math.max(celular() ? 430 : 720, larg * 2.4, alt * 3.2), animar);
-    } else focar(20, 40, celular() ? 620 : 1050, animar);
+      focar((Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2 - 20, Math.max(estreito() ? 430 : 600, larg * 2.4, alt * 3.2), animar);
+    } else focar(20, 40, estreito() ? 620 : 900, animar);
   }
 
   // ----- destaque do que está acontecendo -----
@@ -177,7 +180,7 @@ function montarMapa() {
     info.dataset.slug = p.slug;
     info.innerHTML = `<button type="button" class="fechar" aria-label="Fechar">×</button><span class="selo">${esc(TIPOS[p.tipo] || '')}</span><h2>${esc(p.nome)}</h2>${p.texto ? `<p>${esc(p.texto)}</p>` : ''}
       ${evs.map(e => { const fotos = registros.filter(r => r.evento_id === e.id && r.foto_url).slice(0, 4);
-        return `<div class="ao-vivo"><p class="vivo-titulo"><span class="ponto-vivo"></span>Acontecendo agora</p><strong>${esc(e.titulo)}${demo ? '<span class="tag-exemplo">exemplo</span>' : ''}</strong><span>até ${hora(e.fim)}${e.confirmacoes ? ` · ✔ ${e.confirmacoes} ${e.confirmacoes === 1 ? 'confirmação' : 'confirmações'}` : ''}</span>
+        return `<div class="ao-vivo"><p class="vivo-titulo"><span class="ponto-vivo"></span>Acontecendo agora</p><strong>${esc(e.titulo)}${demo ? '<span class="tag-exemplo">exemplo</span>' : ''}</strong><span>${ate(e)}${e.confirmacoes ? ` · ✔ ${e.confirmacoes} ${e.confirmacoes === 1 ? 'confirmação' : 'confirmações'}` : ''}</span>
           ${fotos.length ? `<div class="fotinhas">${fotos.map(r => `<img src="${esc(r.foto_url)}" alt="${esc(r.legenda)}" loading="lazy">`).join('')}</div>` : ''}</div>`; }).join('')}
       <div class="acoes-info">${evs.length ? '<a class="link-seta" href="agenda.html">Confirmar ou enviar foto</a>' : ''}<a class="link-seta" href="lugares.html#${p.slug}">Sobre este lugar</a></div>`;
     info.hidden = false;
@@ -228,6 +231,6 @@ function montarMapa() {
   });
   new ResizeObserver(aplicar).observe(area);
 
-  focar(20, 40, celular() ? 620 : 1050, false);
+  focar(20, 40, estreito() ? 620 : 900, false);
   return { focar, abrirInfo, marcarVivos, vistaInicial, celular };
 }

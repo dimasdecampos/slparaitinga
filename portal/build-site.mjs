@@ -126,37 +126,43 @@ paginas.push({
     { '@context': 'https://schema.org', '@type': 'City', name: 'São Luiz do Paraitinga', containedInPlace: { '@type': 'State', name: 'São Paulo' }, geo: { '@type': 'GeoCoordinates', latitude: -23.2219, longitude: -45.3104 } },
   ],
   scripts: '<script src="config.js"></script>\n<script type="module" src="home.js"></script>',
-  corpo: `<section class="hero" aria-labelledby="titulo">
-  <div id="mapa" class="mapa" role="application" aria-label="Mapa da cidade. Arraste para mover e use os botões para aproximar."></div>
-  <div class="mapa-zoom"><button type="button" data-zoom="in" aria-label="Aproximar">+</button><button type="button" data-zoom="out" aria-label="Afastar">−</button><button type="button" data-zoom="reset" aria-label="Voltar à vista inicial">⌂</button></div>
-  <article id="mapa-info" class="mapa-info" hidden aria-live="polite"></article>
-  <div class="hero-painel">
-    <p class="olho">Vale do Paraíba · São Paulo</p>
-    <h1 id="titulo">São Luiz do Paraitinga</h1>
-    <p class="lema">O que está acontecendo na cidade, ao vivo no mapa.</p>
+  corpo: `<section class="hero larg" aria-labelledby="titulo">
+  <div class="hero-grade">
+    <div class="hero-texto">
+      <p class="olho">Vale do Paraíba · São Paulo</p>
+      <h1 id="titulo">São Luiz do Paraitinga</h1>
+      <p class="lema">O que está acontecendo na cidade, ao vivo no mapa.</p>
+      <div class="painel-acoes"><a class="btn" href="agenda.html">Agenda completa</a><a class="btn btn-sec" href="agenda.html#novo">Avisar um evento</a></div>
+    </div>
+    <div class="mapa-caixa">
+      <div id="mapa" class="mapa" role="application" aria-label="Mapa da cidade. Arraste para mover e use os botões para aproximar."></div>
+      <div class="mapa-zoom"><button type="button" data-zoom="in" aria-label="Aproximar">+</button><button type="button" data-zoom="out" aria-label="Afastar">−</button><button type="button" data-zoom="reset" aria-label="Voltar à vista inicial">⌂</button></div>
+      <article id="mapa-info" class="mapa-info" hidden aria-live="polite"></article>
+    </div>
     <div id="vivo" class="vivo-lista" aria-live="polite"><p class="carregando">Carregando a agenda…</p></div>
-    <div class="painel-acoes"><a class="btn" href="agenda.html">Agenda completa</a><a class="btn btn-sec" href="agenda.html#novo">Avisar um evento</a></div>
   </div>
 </section>
 
-<section class="secao larg" aria-labelledby="t-prox">
-  <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2><a class="link-seta" href="agenda.html">Ver agenda</a></div>
-  <ul id="proximos" class="cartoes-evento"><li class="carregando">Carregando…</li></ul>
-</section>
+<div class="larg home-colunas">
+  <section class="secao" aria-labelledby="t-prox">
+    <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2><a class="link-seta" href="agenda.html">Ver calendário</a></div>
+    <ul id="proximos" class="cartoes-evento"><li class="carregando">Carregando…</li></ul>
+  </section>
+  <div class="coluna-lateral">
+    <section class="secao" aria-labelledby="t-festa">
+      <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
+      <a class="explore-card destaque" href="festas.html" style="--chita:url(img/chita-${proximaFesta.chita}.svg)"><strong>${esc(proximaFesta.nome)}</strong><span>${esc(proximaFesta.quando)}</span><span class="contagem" data-contagem="${proximaFesta.ini}" data-fim="${proximaFesta.fim}"></span></a>
+    </section>
+  </div>
+</div>
 
 <section class="secao larg" aria-labelledby="t-explore">
   <div class="secao-topo"><h2 id="t-explore">Conheça a cidade</h2></div>
-  <div class="explore">
-    <a class="explore-card destaque" href="festas.html" style="--chita:url(img/chita-${proximaFesta.chita}.svg)"><span class="selo">Próxima festa</span><strong>${esc(proximaFesta.nome)}</strong><span>${esc(proximaFesta.quando)}</span><span class="contagem" data-contagem="${proximaFesta.ini}" data-fim="${proximaFesta.fim}"></span></a>
+  <div class="explore explore-3">
     <a class="explore-card" href="lugares.html"><span class="selo">Lugares</span><strong>Praças, igrejas e o rio</strong><span>${pontos.length} lugares para conhecer, todos no mapa.</span></a>
     <a class="explore-card" href="historia.html"><span class="selo">História</span><strong>De 1769 até hoje</strong><span>A vila à beira do rio, Oswaldo Cruz e a reconstrução depois de 2010.</span></a>
     <a class="explore-card" href="servicos.html"><span class="selo">Serviços</span><strong>Telefones, tempo e avisos</strong><span>Prefeitura, emergências e previsão para a semana.</span></a>
   </div>
-</section>
-
-<section class="secao larg" aria-labelledby="t-avisos">
-  <div class="secao-topo"><h2 id="t-avisos">Avisos da Prefeitura</h2><a class="link-seta" href="servicos.html#avisos">Ver todos</a></div>
-  <ul class="avisos">${avisos.slice(0, 3).map(avisoHTML).join('') || '<li>Sem avisos recentes.</li>'}</ul>
 </section>`,
 });
 
@@ -311,6 +317,82 @@ paginas.push({
 </section>`,
 });
 
+// ---------- páginas de eventos individuais (SEO) ----------
+async function gerarPaginasEventos() {
+  const cfg_supabase = { url: 'https://smlhkifwlbqsvfsixkvo.supabase.co', key: 'sb_publishable_FvMdZ86fu1QYZ1HLEfMmwg_awn-6rhu' };
+  const criarSlug = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const textoGenerico = (cat, nome) => {
+    const textos = {
+      'Show': `Um show em São Luiz do Paraitinga. Acompanhe a programação cultural da cidade na agenda.`,
+      'Festa': `Um evento festivo em São Luiz do Paraitinga. Confira a data, hora e local para não perder.`,
+      'Missa': `Uma celebração religiosa em São Luiz do Paraitinga. Verifique o horário e o local.`,
+      'Feira': `Uma feira em São Luiz do Paraitinga. Veja quando e onde acontece.`,
+      'Oficina': `Uma oficina em São Luiz do Paraitinga. Inscreva-se e aprenda algo novo.`,
+      'Outro': `Um evento em São Luiz do Paraitinga. Confira os detalhes na agenda da cidade.`
+    };
+    return textos[cat] || textos['Outro'];
+  };
+
+  try {
+    const res = await fetch(`${cfg_supabase.url}/rest/v1/eventos?select=id,titulo,inicio,fim,local,categoria,descricao,oculto&oculto=is.false&order=inicio`, {
+      headers: { 'apikey': cfg_supabase.key }
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+    const eventos = await res.json();
+
+    if (!fs.existsSync(aqui('./eventos'))) fs.mkdirSync(aqui('./eventos'));
+
+    for (const ev of eventos) {
+      const slug = criarSlug(ev.titulo);
+      const arquivo = `eventos/${slug}.html`;
+      const dataIni = new Date(ev.inicio);
+      const dataFim = new Date(ev.fim);
+      const dataBR = dataIni.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' });
+      const descricao = ev.descricao || textoGenerico(ev.categoria, ev.titulo);
+
+      paginas.push({
+        arquivo: arquivo,
+        titulo: ev.titulo,
+        descricao: descricao.slice(0, 160),
+        migalha: ev.titulo,
+        jsonld: [{
+          '@context': 'https://schema.org',
+          '@type': 'Event',
+          name: ev.titulo,
+          description: descricao,
+          startDate: ev.inicio,
+          endDate: ev.fim,
+          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+          eventStatus: dataIni > HOJE ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventCancelled',
+          location: { ...lugarLD, name: ev.local || 'São Luiz do Paraitinga' }
+        }],
+        corpo: `${cabecalhoPagina('Evento', esc(ev.titulo), dataBR)}
+<section class="secao larg estreita">
+  <article>
+    <p>${esc(descricao)}</p>
+    <div style="margin: 2rem 0; padding: 1.5rem; background: #f5f5f5; border-radius: 12px; text-align: center;">
+      <p style="margin: 0 0 0.5rem; color: #666; font-size: 0.9rem;">📍 Quando</p>
+      <p style="margin: 0; font-weight: 600; font-size: 1.1rem;">${esc(dataBR)}</p>
+      ${ev.local ? `<p style="margin: 1rem 0 0; color: #666; font-size: 0.9rem;">📍 Onde</p><p style="margin: 0; font-weight: 500;">${esc(ev.local)}</p>` : ''}
+    </div>
+    <p style="text-align: center; margin-top: 2rem;">
+      <a class="btn" href="agenda.html">Voltar para a agenda</a>
+    </p>
+  </article>
+</section>`
+      });
+    }
+    console.log(`Eventos: ${eventos.length} páginas geradas`);
+  } catch (err) {
+    console.error('Aviso: não foi possível buscar eventos do Supabase. As páginas de eventos não foram geradas.', err.message);
+  }
+}
+
+await gerarPaginasEventos();
+
 for (const p of paginas) fs.writeFileSync(aqui('./' + p.arquivo), layout(p));
 
 // ---------- arquivos de SEO ----------
@@ -321,7 +403,11 @@ fs.writeFileSync(aqui('./img/logo.svg'), `<svg xmlns="http://www.w3.org/2000/svg
   + `<text x="72" y="43" font-family="'Plus Jakarta Sans', system-ui, 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="32" letter-spacing="-0.6" fill="#1d1b18">slparaitinga</text></svg>\n`);
 fs.writeFileSync(aqui('./robots.txt'), `User-agent: *\nAllow: /\n${URL_SITE ? `Sitemap: ${URL_SITE}/sitemap.xml\n` : ''}`);
 if (URL_SITE) {
-  fs.writeFileSync(aqui('./sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paginas.map(p => `  <url><loc>${URL_SITE}/${p.arquivo === 'index.html' ? '' : p.arquivo}</loc><lastmod>${isoDia(HOJE)}</lastmod><changefreq>${['index.html', 'agenda.html'].includes(p.arquivo) ? 'hourly' : 'weekly'}</changefreq></url>`).join('\n')}\n</urlset>\n`);
+  const urls = paginas.map(p => {
+    const freq = ['index.html', 'agenda.html'].includes(p.arquivo) ? 'hourly' : p.arquivo.startsWith('eventos/') ? 'monthly' : 'weekly';
+    return `  <url><loc>${URL_SITE}/${p.arquivo === 'index.html' ? '' : p.arquivo}</loc><lastmod>${isoDia(HOJE)}</lastmod><changefreq>${freq}</changefreq></url>`;
+  });
+  fs.writeFileSync(aqui('./sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`);
 }
 console.log('Páginas:', paginas.map(p => p.arquivo).join(', '));
 console.log(URL_SITE ? `Domínio: ${URL_SITE} (canonical, Open Graph e sitemap.xml gerados)` : 'AVISO: "url" vazio em site.config.json: canonical, og:url, og:image e sitemap.xml não foram gerados.');
