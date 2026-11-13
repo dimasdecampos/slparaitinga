@@ -119,6 +119,22 @@ language sql stable set search_path = '' as $$
   );
 $$;
 
+-- ---------- limites por usuário ----------
+-- Contados em funções security definer: uma política não pode consultar a própria tabela
+-- (o Postgres responde "infinite recursion detected in policy").
+create function public.eventos_do_dia(p_usuario uuid) returns bigint
+language sql stable security definer set search_path = '' as $$
+  select count(*) from public.eventos e where e.criado_por = p_usuario and e.criado_em > now() - interval '1 day';
+$$;
+create function public.registros_da_hora(p_usuario uuid) returns bigint
+language sql stable security definer set search_path = '' as $$
+  select count(*) from public.registros r where r.usuario_id = p_usuario and r.criado_em > now() - interval '1 hour';
+$$;
+revoke execute on function public.eventos_do_dia(uuid) from public, anon;
+revoke execute on function public.registros_da_hora(uuid) from public, anon;
+grant execute on function public.eventos_do_dia(uuid) to authenticated;
+grant execute on function public.registros_da_hora(uuid) to authenticated;
+
 -- ---------- segurança (RLS) ----------
 alter table public.perfis enable row level security;
 alter table public.eventos enable row level security;
@@ -126,7 +142,14 @@ alter table public.confirmacoes enable row level security;
 alter table public.registros enable row level security;
 alter table public.denuncias enable row level security;
 
-create policy "perfis: leitura pública" on public.perfis for select using (true);
+-- O nome só fica público para quem publicou algo (evento ou foto); o resto só enxerga o próprio perfil.
+-- Importante porque o projeto Supabase é compartilhado e tem contas de outros apps.
+create policy "perfis: autores e o próprio" on public.perfis for select
+  using (
+    id = (select auth.uid())
+    or exists (select 1 from public.eventos e where e.criado_por = perfis.id)
+    or exists (select 1 from public.registros r where r.usuario_id = perfis.id)
+  );
 create policy "perfis: editar o próprio" on public.perfis for update to authenticated
   using (id = (select auth.uid())) with check (id = (select auth.uid()));
 
@@ -136,7 +159,7 @@ create policy "eventos: criar" on public.eventos for insert to authenticated
   with check (
     criado_por = (select auth.uid())
     and inicio > now() - interval '1 day'
-    and (select count(*) from public.eventos e where e.criado_por = (select auth.uid()) and e.criado_em > now() - interval '1 day') < 10
+    and public.eventos_do_dia((select auth.uid())) < 10
   );
 create policy "eventos: editar os próprios" on public.eventos for update to authenticated
   using (criado_por = (select auth.uid())) with check (criado_por = (select auth.uid()));
@@ -155,7 +178,7 @@ create policy "registros: enviar na janela" on public.registros for insert to au
   with check (
     usuario_id = (select auth.uid())
     and public.janela_aberta(evento_id)
-    and (select count(*) from public.registros r where r.usuario_id = (select auth.uid()) and r.criado_em > now() - interval '1 hour') < 20
+    and public.registros_da_hora((select auth.uid())) < 20
   );
 create policy "registros: apagar os próprios" on public.registros for delete to authenticated
   using (usuario_id = (select auth.uid()));
