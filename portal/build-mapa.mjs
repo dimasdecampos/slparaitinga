@@ -24,12 +24,6 @@ out.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VB.x} ${VB.y} ${VB.
 <title id="mapa-titulo">Mapa de São Luiz do Paraitinga</title>
 <rect x="${VB.x - 3000}" y="${VB.y - 3000}" width="${VB.w + 6000}" height="${VB.h + 6000}" fill="${C.terra}"/>`);
 
-const FILL = { grass: C.grama, wood: C.mata, cemetery: C.cemiterio, pitch: C.quadra, park: C.praca };
-out.push('<g id="g-verde">');
-for (const t of ['grass', 'wood', 'cemetery', 'pitch', 'park'])
-  for (const g of city.green) if (g.t === t && dentro(g.p)) out.push(`<path d="${d(g.p, true)}" fill="${FILL[t]}"/>`);
-out.push('</g>');
-
 const ehUrbana = rd => rd.t === 'residential' || rd.t === 'pedestrian' || rd.t === 'living_street' || (['tertiary', 'secondary', 'unclassified'].includes(rd.t) && Math.hypot(rd.p[0], rd.p[1]) < 700);
 out.push(`<g id="g-bairro" fill="none" stroke="${C.bairro}" stroke-linecap="round" stroke-linejoin="round" stroke-width="44">`);
 for (const rd of city.roads) if (ehUrbana(rd) && !rd.a && dentro(rd.p)) out.push(`<path d="${d(rd.p)}"/>`);
@@ -55,11 +49,6 @@ for (const rd of ruas) {
   const cor = principal(rd.t) ? C.via : C.rua;
   out.push(rd.a ? `<path d="${d(rd.p, true)}" fill="${cor}" stroke="none"/>` : `<path d="${d(rd.p)}" stroke="${cor}" stroke-width="${LARG[rd.t]}"/>`);
 }
-out.push('</g>');
-
-out.push(`<g id="g-predios" stroke="${C.casaBorda}" stroke-width="1" stroke-linejoin="round">`);
-for (const b of city.buildings) if (dentro(b.p))
-  out.push(b.k === 'church' ? `<path d="${d(b.p, true)}" fill="${C.igreja}" stroke="${C.igrejaBorda}" stroke-width="2"/>` : `<path d="${d(b.p, true)}" fill="${b.k === 'civic' ? C.civico : C.casa}"/>`);
 out.push('</g>');
 
 out.push(`<g id="g-nomes" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-size="11" font-weight="500" fill="${C.texto}">`);
@@ -116,4 +105,18 @@ if (rio) {
   pontos.push({ slug: 'rio-paraitinga', nome: 'Rio Paraitinga', tipo: 'praca', texto: 'O rio que corta a cidade. Na cheia é monitorado pela Defesa Civil; fora dela, é procurado para o rafting.', x: r(best.x), y: r(best.y) });
 }
 fs.writeFileSync(new URL('./data/pontos.json', import.meta.url), JSON.stringify(pontos, null, 1));
+
+// ---------- só os lugares oficiais, com marcação sutil ----------
+const dentroDe = (px, py, p) => { let c = false; for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) if ((p[i + 1] > py) !== (p[j + 1] > py) && px < (p[j] - p[i]) * (py - p[i + 1]) / (p[j + 1] - p[i + 1]) + p[i]) c = !c; return c; };
+const COR = { igreja: '#b5552f', cultura: '#8a6a2f', servico: '#4a6f8a', praca: '#5f8a4e' };
+out.push('<g id="g-oficiais" stroke-linejoin="round">');
+for (const pt of pontos) {
+  if (pt.slug === 'rio-paraitinga') continue;
+  const alvo = pt.tipo === 'praca'
+    ? city.green.find(g => ['park', 'grass', 'pitch'].includes(g.t) && dentroDe(pt.x, pt.y, g.p))
+    : city.buildings.find(b => dentroDe(pt.x, pt.y, b.p));
+  if (alvo) out.push(`<path d="${d(alvo.p, true)}" fill="${COR[pt.tipo]}" fill-opacity=".14" stroke="${COR[pt.tipo]}" stroke-opacity=".55" stroke-width="1.4"${pt.tipo === 'praca' ? ' stroke-dasharray="5 4"' : ''}/>`);
+}
+out.push('</g></svg>');
+fs.writeFileSync(new URL('./mapa.svg', import.meta.url), out.join('\n'));
 console.log('mapa.svg', (fs.statSync(new URL('./mapa.svg', import.meta.url)).size / 1024).toFixed(0) + ' KB | ruas nomeadas:', k, '| lugares:', pontos.length);
