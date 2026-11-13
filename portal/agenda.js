@@ -62,9 +62,11 @@ function exigirLogin(depois) {
 }
 
 // ---------- conta ----------
+// Contas de administração aparecem só como "Admin" no cabeçalho (id do perfil, não e-mail).
+const ADMINS = new Set(["29b7ad66-12b5-4e0a-ac1a-63879e9f785e"]);
 function renderConta() {
   const u = api.usuario();
-  $('#conta').innerHTML = u ? `Olá, <b>${esc(u.nome)}</b> <button type="button" id="sair">Sair</button>` : `<button type="button" id="entrar">Entrar para participar</button>`;
+  $('#conta').innerHTML = u ? `Olá, <b>${esc(ADMINS.has(u.id) ? "Admin" : u.nome)}</b> <button type="button" id="sair">Sair</button>` : `<button type="button" id="entrar">Entrar para participar</button>`;
   $('#sair')?.addEventListener('click', async () => { await api.sair(); toast('Você saiu.'); });
   $('#entrar')?.addEventListener('click', () => abrirEntrar());
 }
