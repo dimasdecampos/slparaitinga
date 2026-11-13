@@ -43,6 +43,11 @@ async function supabaseBackend(cfg) {
     usuario: () => perfil,
     aoMudarUsuario: f => ouvintes.add(f),
     precisaEmail: true,
+    google: true,
+    async entrarComGoogle() {
+      const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href.split('#')[0].split('?')[0], queryParams: { prompt: 'select_account' } } });
+      falhou(error, 'Não foi possível entrar com o Google.');
+    },
     async entrar({ email, nome }) {
       const { error } = await sb.auth.signInWithOtp({ email, options: { data: { nome }, emailRedirectTo: location.href.split('#')[0] } });
       falhou(error, 'Não foi possível enviar o link.');

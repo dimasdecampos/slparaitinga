@@ -57,11 +57,20 @@ function abrirEntrar(depois) {
   const f = $('#form-entrar');
   f.querySelector('.erro').textContent = '';
   $('#campo-email').hidden = !api.precisaEmail; f.email.required = api.precisaEmail;
-  $('#entrar-explica').textContent = api.precisaEmail
-    ? 'Enviamos um link de acesso para o seu e-mail. Não precisa criar senha.'
-    : 'Na demonstração basta um nome. Com o banco ligado, o acesso será por um link enviado ao e-mail.';
+  $('#entrar-google').hidden = $('#entrar-ou').hidden = !api.google;
+  $('#entrar-explica').textContent = api.google
+    ? 'Entre com a sua conta Google, sem criar senha. Ou receba um link de acesso no e-mail.'
+    : api.precisaEmail
+      ? 'Enviamos um link de acesso para o seu e-mail. Não precisa criar senha.'
+      : 'Na demonstração basta um nome. Com o banco ligado, o acesso será por um link enviado ao e-mail.';
   $('#dlg-entrar').showModal();
 }
+$('#entrar-google').addEventListener('click', async e => {
+  const btn = e.currentTarget, erro = $('#form-entrar').querySelector('.erro');
+  btn.disabled = true; erro.textContent = '';
+  try { await api.entrarComGoogle(); } // redireciona para o Google; ao voltar a sessão já está ativa
+  catch (err) { erro.textContent = err.message; btn.disabled = false; }
+});
 $('#form-entrar').addEventListener('submit', async e => {
   e.preventDefault(); const f = e.target, btn = f.querySelector('.botao-primario');
   btn.disabled = true;

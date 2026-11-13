@@ -14,16 +14,35 @@ create table public.perfis (
   criado_em timestamptz not null default now()
 );
 
+-- Nome do perfil: o digitado no login por e-mail ("nome"), senão o da conta Google ("full_name"/"name"),
+-- senão a parte do e-mail antes do @, senão "Morador".
 create function public.novo_usuario() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
   insert into public.perfis (id, nome)
-  values (new.id, left(coalesce(nullif(trim(new.raw_user_meta_data ->> 'nome'), ''), split_part(new.email, '@', 1)), 60));
+  values (new.id, left(coalesce(
+    nullif(trim(new.raw_user_meta_data ->> 'nome'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
+    nullif(split_part(new.email, '@', 1), ''),
+    'Morador'), 60))
+  on conflict (id) do nothing;
   return new;
 end $$;
 
 create trigger ao_criar_usuario after insert on auth.users
   for each row execute function public.novo_usuario();
+
+-- Projeto Supabase compartilhado: quem já tinha conta antes desta migração também ganha perfil.
+insert into public.perfis (id, nome)
+select u.id, left(coalesce(
+  nullif(trim(u.raw_user_meta_data ->> 'nome'), ''),
+  nullif(trim(u.raw_user_meta_data ->> 'full_name'), ''),
+  nullif(trim(u.raw_user_meta_data ->> 'name'), ''),
+  nullif(split_part(u.email, '@', 1), ''),
+  'Morador'), 60)
+from auth.users u
+on conflict (id) do nothing;
 
 -- ---------- eventos ----------
 create table public.eventos (
@@ -85,6 +104,10 @@ begin
 end $$;
 create trigger ao_denunciar after insert on public.denuncias
   for each row execute function public.aplicar_denuncia();
+
+-- funções de trigger não devem ser chamáveis pela API
+revoke execute on function public.novo_usuario() from public, anon, authenticated;
+revoke execute on function public.aplicar_denuncia() from public, anon, authenticated;
 
 -- ---------- janela em que o evento aceita confirmação e fotos ----------
 create function public.janela_aberta(p_evento bigint) returns boolean

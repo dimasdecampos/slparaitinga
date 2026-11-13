@@ -61,6 +61,12 @@
 .dialogo .linha { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
 .dialogo .acoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .dialogo .nota { margin: 0; }
+.botao-google[hidden], .dialogo .ou[hidden] { display: none; }
+.botao-google { font: inherit; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--linha); background: #fff; color: var(--tinta); cursor: pointer; }
+.botao-google:hover { border-color: var(--suave); }
+.botao-google:disabled { opacity: .6; cursor: wait; }
+.dialogo .ou { margin: 0; display: flex; align-items: center; gap: 10px; color: var(--suave); font-size: .85rem; }
+.dialogo .ou::before, .dialogo .ou::after { content: ""; flex: 1; height: 1px; background: var(--linha); }
 .erro { color: #b3261e; font-size: .88rem; margin: 0; min-height: 0; }
 .erro:empty { display: none; }
 .seletor-foto { position: relative; border: 2px dashed var(--linha); border-radius: 12px; min-height: 140px; display: grid !important; place-items: center; cursor: pointer; overflow: hidden; background: var(--papel); }
