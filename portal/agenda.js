@@ -252,15 +252,15 @@ $('#cal-grade').addEventListener('keydown', e => {
   const d = doDia(b.dataset.dia); d.setDate(d.getDate() + passo);
   const alvo = $(`[data-dia="${chave(d)}"]`); if (alvo) alvo.focus();
 });
-const MAX_FOTOS = 6;
+const MAX_FOTOS = 8;
 const fotosAbertas = new Set(); // eventos com a galeria expandida
 function galeriaHTML(eventoId, regs, u) {
   const fotos = regs.filter(r => r.foto_url), notas = regs.filter(r => !r.foto_url);
   if (!regs.length) return '';
   const aberta = fotosAbertas.has(eventoId), vistas = aberta ? fotos : fotos.slice(0, MAX_FOTOS);
   const den = r => (u && u.id !== r.usuario_id ? `<button type="button" class="denunciar" data-denunciar="${r.id}">denunciar</button>` : '');
-  const tile = r => `<figure class="foto"><button type="button" class="ver" data-ver="${r.id}" aria-label="Ampliar foto: ${esc(r.legenda)}"><img src="${esc(r.foto_url)}" alt="${esc(r.legenda)}" loading="lazy" decoding="async"></button><figcaption><b>${esc(r.legenda)}</b><span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den(r)}</figcaption></figure>`;
-  return `<div class="galeria">${fotos.length ? `<div class="mosaico n-${Math.min(vistas.length, 4)}">${vistas.map(tile).join('')}</div>` : ''}${fotos.length > MAX_FOTOS ? `<button type="button" class="botao-sec ver-todas" data-acao="todas-fotos">${aberta ? 'Mostrar menos' : `Ver todas as ${fotos.length} fotos`}</button>` : ''}${notas.length ? `<ul class="notas">${notas.map(r => `<li>“${esc(r.legenda)}” <span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den(r)}</li>`).join('')}</ul>` : ''}</div>`;
+  const tile = r => `<button type="button" class="mini" data-ver="${r.id}" title="${esc(r.legenda)} · ${esc(r.autor)}" aria-label="Ampliar foto: ${esc(r.legenda)}"><img src="${esc(r.foto_url)}" alt="${esc(r.legenda)}" loading="lazy" decoding="async"></button>`;
+  return `<div class="galeria">${fotos.length ? `<div class="minis">${vistas.map(tile).join('')}</div>` : ''}${fotos.length > MAX_FOTOS ? `<button type="button" class="botao-sec ver-todas" data-acao="todas-fotos">${aberta ? 'Mostrar menos' : `Ver todas as ${fotos.length} fotos`}</button>` : ''}${notas.length ? `<ul class="notas">${notas.map(r => `<li>“${esc(r.legenda)}” <span>${esc(r.autor)} · ${haQuanto(r.criado_em)}</span>${den(r)}</li>`).join('')}</ul>` : ''}</div>`;
 }
 
 // ---------- ações ----------
@@ -269,11 +269,13 @@ document.addEventListener('click', async e => {
   if (t.dataset.cat) { filtro = t.dataset.cat; render(); return; }
   if (t.dataset.ver) {
     const r = registros.find(x => String(x.id) === t.dataset.ver); if (!r) return;
-    $('#foto-grande').src = r.foto_url; $('#foto-grande').alt = r.legenda; $('#legenda-grande').textContent = `${r.legenda} — ${r.autor}`; $('#dlg-ver').showModal(); return;
+    $('#foto-grande').src = r.foto_url; $('#foto-grande').alt = r.legenda; $('#legenda-grande').textContent = `${r.legenda} — ${r.autor} · ${haQuanto(r.criado_em)}`;
+    const eu = api.usuario(), den = $('#den-foto'); den.dataset.denunciar = r.id; den.hidden = !eu || eu.id === r.usuario_id;
+    $('#dlg-ver').showModal(); return;
   }
   if (t.dataset.denunciar) {
     if (!exigirLogin()) return;
-    try { await api.denunciar('registro', Number(t.dataset.denunciar), 'conteúdo impróprio'); toast('Obrigado. A foto será revisada.'); } catch (err) { toast(err.message); }
+    try { await api.denunciar('registro', Number(t.dataset.denunciar), 'conteúdo impróprio'); $('#dlg-ver').close(); toast('Obrigado. A foto será revisada.'); } catch (err) { toast(err.message); }
     return;
   }
   const acao = t.dataset.acao, card = t.closest('[data-id]'), id = card && Number(card.dataset.id);

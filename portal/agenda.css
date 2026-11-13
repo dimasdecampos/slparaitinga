@@ -27,22 +27,17 @@
 .acoes-vivo .ja { background: #2f5d2a; }
 /* galeria de fotos do evento (valem só pelo dia) */
 .galeria { margin: 2px 0 16px; display: grid; gap: 10px; }
-.mosaico { display: grid; gap: 6px; border-radius: 14px; overflow: hidden; }
-.foto { position: relative; margin: 0; background: var(--linha); min-height: 0; overflow: hidden; }
-.foto .ver { all: unset; cursor: zoom-in; display: block; width: 100%; height: 100%; }
-.foto img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
-.foto:hover img { transform: scale(1.03); }
-.foto figcaption { position: absolute; inset: auto 0 0 0; padding: 26px 12px 9px; color: #fff; font-size: .8rem; line-height: 1.3; background: linear-gradient(to top, rgba(0, 0, 0, .66), rgba(0, 0, 0, 0)); pointer-events: none; }
-.foto figcaption b { display: block; font-weight: 600; font-size: .86rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.foto figcaption span { opacity: .85; font-size: .74rem; }
-.foto .denunciar { all: unset; pointer-events: auto; cursor: pointer; font-size: .7rem; margin-left: 8px; text-decoration: underline; opacity: .8; }
-.n-1 { grid-template-columns: 1fr; } .n-1 .foto { height: clamp(220px, 42vw, 400px); }
-.n-2 { grid-template-columns: 1fr 1fr; } .n-2 .foto { height: clamp(170px, 30vw, 300px); }
-.n-3 { grid-template-columns: 2fr 1fr; grid-template-rows: repeat(2, clamp(105px, 19vw, 190px)); } .n-3 .foto:first-child { grid-row: span 2; }
-.n-4 { grid-template-columns: repeat(3, 1fr); grid-auto-rows: clamp(95px, 17vw, 170px); } .n-4 .foto:first-child { grid-column: span 2; grid-row: span 2; }
-@media (max-width: 560px) {
-  .foto figcaption { padding-top: 18px; font-size: .74rem; }
-  .n-4 .foto:nth-child(n+4) figcaption b { display: none; }
+.minis { display: flex; flex-wrap: wrap; gap: 6px; }
+.mini { all: unset; cursor: zoom-in; width: 76px; height: 76px; border-radius: 10px; overflow: hidden; background: var(--linha); box-shadow: 0 0 0 1px var(--linha); }
+.mini:focus-visible { outline: 3px solid var(--telha); outline-offset: 2px; }
+.mini img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
+.mini:hover img { transform: scale(1.08); }
+/* telas largas: a galeria fica ao lado do texto do evento */
+@media (min-width: 720px) {
+  .vivo { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; align-items: start; }
+  .vivo > * { grid-column: 1; }
+  .vivo > .galeria { grid-column: 2; grid-row: 1 / span 4; width: 244px; margin: 0; }
+  .vivo > .acoes-vivo { grid-column: 1 / -1; }
 }
 .ver-todas { justify-self: start; }
 .notas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
