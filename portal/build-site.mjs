@@ -174,9 +174,27 @@ paginas.push({
     <div class="cabecalho-secao"><h2 id="t-agora"><span class="ponto-vivo" aria-hidden="true"></span>Acontecendo agora</h2><button type="button" class="botao-primario" id="novo-evento">+ Adicionar evento</button></div>
     <div id="agora" class="lista-agora"></div>
   </section>
-  <section aria-labelledby="t-prox">
-    <div class="cabecalho-secao"><h2 id="t-prox">Próximos eventos</h2><div id="filtro-cat" class="filtros" role="toolbar" aria-label="Filtrar por tipo"></div></div>
-    <div id="proximos"></div>
+  <section aria-labelledby="cal-titulo" id="bloco-cal">
+    <div class="cal-barra">
+      <h2 id="cal-titulo" aria-live="polite">Calendário</h2>
+      <div class="cal-ctrl">
+        <button type="button" class="botao-sec" id="cal-hoje">Hoje</button>
+        <span class="cal-nav">
+          <button type="button" class="icone-btn" id="cal-ant" aria-label="Mês anterior"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button type="button" class="icone-btn" id="cal-prox" aria-label="Próximo mês"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </span>
+        <span class="seg" role="group" aria-label="Forma de exibição"><button type="button" id="vis-mes" aria-pressed="true">Mês</button><button type="button" id="vis-lista" aria-pressed="false">Lista</button></span>
+      </div>
+    </div>
+    <div id="filtro-cat" class="filtros" role="toolbar" aria-label="Filtrar por tipo"></div>
+    <div id="bloco-mes" class="cal-layout">
+      <div class="cal-quadro">
+        <div class="cal-semana" aria-hidden="true"><span>dom</span><span>seg</span><span>ter</span><span>qua</span><span>qui</span><span>sex</span><span>sáb</span></div>
+        <div id="cal-grade" class="cal-grade"></div>
+      </div>
+      <aside id="cal-dia" class="cal-dia" aria-live="polite" aria-label="Eventos do dia selecionado"></aside>
+    </div>
+    <div id="proximos" hidden></div>
   </section>
   <section class="como-funciona" aria-labelledby="t-como">
     <h2 id="t-como">Como funciona</h2>
