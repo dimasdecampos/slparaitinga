@@ -36,7 +36,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 
 /* topo */
 .topo { position: sticky; top: 0; z-index: 30; background: rgba(255, 255, 255, .92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--linha); }
-.topo::before { content: ""; display: block; height: 5px; background: url(img/chita-vermelha.svg) 0 -6px / 90px; }
+.topo::before { content: ""; display: block; height: 8px; background: url(img/faixa-flores.svg) 0 50% / auto 12px; }
 .topo-in { max-width: 1160px; margin: 0 auto; padding: 0 20px; height: 58px; display: flex; align-items: center; gap: 18px; }
 .logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-family: var(--serif); font-weight: 800; font-size: 1.3rem; letter-spacing: -.01em; }
 .flor { width: 32px; height: 32px; flex: none; }
@@ -166,7 +166,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .pagina-topo { background: var(--cartao); border-bottom: 1px solid var(--linha); padding: 48px 0 40px; }
 .pagina-topo h1 { font-size: clamp(2.1rem, 5vw, 3.2rem); }
 .pagina-topo .lema { max-width: 40em; font-size: 1.08rem; }
-.chita-faixa { height: 14px; background: url(img/chita-vermelha.svg) 0 0 / 120px; }
+.chita-faixa { height: 16px; background: url(img/faixa-flores.svg) 0 0 / auto 16px; }
 
 .festas { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-bottom: 20px; }
 .festa { background: var(--cartao); border-radius: 20px; overflow: hidden; box-shadow: var(--sombra); }
@@ -224,7 +224,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 
 /* rodapé */
 .rodape { margin-top: 72px; background: var(--tinta); color: #d9d4cb; }
-.rodape::before { content: ""; display: block; height: 10px; background: url(img/chita-vermelha.svg) 0 0 / 110px; }
+.rodape::before { content: ""; display: block; height: 14px; background: url(img/faixa-flores.svg) 0 0 / auto 14px; }
 .rodape-in { max-width: 1160px; margin: 0 auto; padding: 36px 20px 40px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px 40px; }
 .rodape .logo { color: #fff; }
 .rodape p { margin: 8px 0 0; font-size: .92rem; }
