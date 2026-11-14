@@ -11,6 +11,7 @@ export function janelaAberta(ev, agora = Date.now()) {
 }
 // A comunidade avisa que acabou: 2 avisos "já terminou" e mais avisos do que confirmações.
 export function encerrado(ev) {
+  if (ev.encerrado_em) return true; // a equipe encerrou com um clique
   const n = Number(ev.encerramentos) || 0;
   return n >= 2 && n > (Number(ev.confirmacoes) || 0);
 }
@@ -60,6 +61,8 @@ async function supabaseBackend(cfg) {
   return {
     modo: 'supabase',
     usuario: () => null,
+    papel: () => 'anonimo',
+    definirFim: delegar('definirFim'),
     aoMudarUsuario: f => (completo ? completo.then(b => b.aoMudarUsuario(f)) : pendentes.push(f)),
     precisaEmail: true,
     google: true,
@@ -89,9 +92,11 @@ async function supabaseCompleto(cfg) {
   const sb = createClient(cfg.supabaseUrl, cfg.supabaseKey);
   let perfil = null;
   const ouvintes = new Set();
+  let papel = 'anonimo';
   async function carregarPerfil(session) {
-    if (!session?.user) { perfil = null; return; }
-    const { data } = await sb.from('perfis').select('id, nome').eq('id', session.user.id).maybeSingle();
+    if (!session?.user) { perfil = null; papel = 'anonimo'; return; }
+    const [r, { data }] = await Promise.all([sb.rpc('meu_papel'), sb.from('perfis').select('id, nome').eq('id', session.user.id).maybeSingle()]);
+    papel = r.data || 'usuario';
     perfil = data || { id: session.user.id, nome: session.user.email.split('@')[0] };
   }
   await carregarPerfil((await sb.auth.getSession()).data.session);
@@ -102,6 +107,11 @@ async function supabaseCompleto(cfg) {
   return {
     modo: 'supabase',
     usuario: () => perfil,
+    papel: () => papel,
+    async definirFim(id, fimIso, encerradoEm = null) { // só a equipe (o banco confere): "encerrar agora" e o desfazer
+      const { error } = await sb.from('eventos').update({ fim: fimIso, encerrado_em: encerradoEm }).eq('id', id);
+      falhou(error, 'Não foi possível encerrar o evento.');
+    },
     aoMudarUsuario: f => ouvintes.add(f),
     precisaEmail: true,
     google: true,
@@ -211,6 +221,8 @@ function demoBackend() {
   return {
     modo: 'demo',
     usuario: eu,
+    papel: () => (eu() ? 'admin' : 'anonimo'),
+    async definirFim(id, fimIso, encerradoEm = null) { const ev = db.eventos.find(e => e.id === id); if (!ev) throw new Error('Evento não encontrado.'); ev.fim = fimIso; ev.encerrado_em = encerradoEm; gravar(db); },
     aoMudarUsuario: f => ouvintes.add(f),
     precisaEmail: false,
     async entrar({ nome }) {

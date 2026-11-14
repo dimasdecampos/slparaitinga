@@ -53,8 +53,43 @@ const FESTAS = (await carregarFestas({ supabaseUrl: SUPABASE, supabaseKey: SUPAB
 FESTAS.forEach(f => { f.pagina = `festas/${f.id}.html`; });
 const proximaFesta = FESTAS.find(f => f.ini);
 
+// ---------- fotos da home (painel /admin, aba "Home") ----------
+// capa do topo e os cartões de "Conheça a cidade". Sem banco, usa a última cópia salva; sem foto, o site usa a estampa de chita.
+const COPIA_IMAGENS = aqui('./data/site-imagens.json');
+async function carregarImagensSite() {
+  try {
+    const r = await fetch(`${SUPABASE}/rest/v1/site_imagens?select=chave,imagem,legenda`, { headers: { apikey: SUPABASE_KEY }, signal: AbortSignal.timeout(15000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const lista = await r.json();
+    fs.writeFileSync(COPIA_IMAGENS, JSON.stringify(lista, null, 1) + '\n');
+    console.log('Fotos da home: lidas do banco', lista.filter(x => x.imagem).length);
+    return lista;
+  } catch (err) {
+    console.warn('Fotos da home: banco indisponível, usando a última cópia:', err.message);
+    return ler('./data/site-imagens.json', []);
+  }
+}
+const urlImagemSite = caminho => (caminho && SUPABASE ? `${SUPABASE}/storage/v1/object/public/site/${caminho.split('/').map(encodeURIComponent).join('/')}` : null);
+// O painel envia duas versões: a grande (caminho salvo) e uma menor para celular (mesmo nome com "-p" antes do .jpg).
+const IMAGENS = Object.fromEntries((SUPABASE ? await carregarImagensSite() : []).filter(x => x.imagem).map(x => [x.chave, {
+  url: urlImagemSite(x.imagem), urlP: urlImagemSite(x.imagem.replace(/\.jpg$/, '-p.jpg')), legenda: x.legenda || '',
+}]));
+const fotoSite = (chave, { classe, sizes, prioridade = false, alt = '' }) => {
+  const f = IMAGENS[chave]; if (!f) return '';
+  return `<img class="${classe}" src="${esc(f.url)}" srcset="${esc(f.urlP)} 900w, ${esc(f.url)} 1800w" sizes="${sizes}" alt="${esc(f.legenda || alt)}"${prioridade ? ' fetchpriority="high"' : ' loading="lazy"'} decoding="async">`;
+};
+
 // ---------- layout ----------
 const NAV = [['./', 'Início', 'index.html'], ['agenda.html', 'Agenda'], ['festas.html', 'Festas'], ['lugares.html', 'Lugares'], ['historia.html', 'História'], ['servicos.html', 'Serviços']];
+// Barra fixa no rodapé do celular: as seções mais usadas a um toque (História fica no menu do topo).
+const ICONE = d => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const BARRA = [
+  ['./', 'Início', 'index.html', 'M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10'],
+  ['agenda.html', 'Agenda', 'agenda.html', 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4'],
+  ['festas.html', 'Festas', 'festas.html', 'M2 5q10 6 20 0M4.5 6.4l1.3 5.3 3.3-4.1zM10 7.9l2 5.1 2-5.1zM14.9 7.6l3.3 4.1 1.3-5.3zM3 15q9 6 18 0M7.5 16.9l1 4 2.4-3.1zM13.1 17.8l2.4 3.1 1-4z'],
+  ['lugares.html', 'Lugares', 'lugares.html', 'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z'],
+  ['servicos.html', 'Serviços', 'servicos.html', 'M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.6 3.6a1 1 0 0 1-.25 1z'],
+];
 // Logomarca: flor de chita "Clássica" (5 pétalas, 2 folhas, miolo pontilhado). Fonte única para o topo, o rodapé, o favicon e img/logo.svg.
 const MARCA = { petala: '#e5243b', miolo: '#ffd23f', folha: '#22a35a', ponto: '#ffffff' };
 const FLOR_DESENHO = `<g fill="${MARCA.folha}">${[36, 252].map(a => `<ellipse rx="4.5" ry="10" cy="-13" transform="rotate(${a})"/>`).join('')}</g>`
@@ -95,14 +130,14 @@ ${canon ? `<meta property="og:url" content="${canon}">\n<meta property="og:image
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="site.css">
 ${dicas}
 ${css}
 ${ld.map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n')}
 </head>
-<body>
+<body${privada ? '' : ' class="com-barra"'}>
 <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 <header class="topo">
   <div class="topo-in">
@@ -124,6 +159,7 @@ ${corpo}
     <p class="creditos">Mapa: © <a href="https://www.openstreetmap.org/copyright" rel="noopener">colaboradores do OpenStreetMap</a>. Previsão do tempo: Open-Meteo. A agenda é enviada pelos moradores; confirme horários com os organizadores.</p>
   </div>
 </footer>
+${privada ? '' : `<nav class="barra-nav" aria-label="Atalhos">${BARRA.map(([href, nome, arq, d]) => `<a href="${href}"${arq === arquivo || (arq === 'festas.html' && arquivo.startsWith('festas/')) ? ' aria-current="page"' : ''}>${ICONE(d)}<span>${nome}</span></a>`).join('')}</nav>`}
 <script type="module" src="site.js"></script>
 ${scripts}
 </body>
@@ -150,6 +186,26 @@ const festasHome = [...FESTAS.filter(f => f.ini), ...FESTAS.filter(f => !f.ini)]
 // Dicas de carregamento: a agenda fala com o Supabase, então já abrimos a conexão e baixamos o módulo cedo.
 const dicasAgenda = (extra = '') => (SUPABASE ? `<link rel="preconnect" href="${SUPABASE}" crossorigin>` : '') + '<link rel="modulepreload" href="backend.js">' + extra;
 
+const secaoFestas = `<section class="secao larg" aria-labelledby="t-festa">
+  <div class="secao-topo"><h2 id="t-festa">Próximas festas</h2>
+    <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Festas anteriores" hidden>${SETA_ESQ}</button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximas festas" hidden>${SETA_DIR}</button><a class="link-seta" href="festas.html">Todas as festas</a></div></div>
+  <ul class="carrossel carrossel-festas" tabindex="0" aria-label="Próximas festas (role para o lado)">
+    ${festasHome.map(f => `<li><a class="cartao-ev cartao-festa" href="${f.pagina}" data-festa="${esc(f.id)}" data-resumo="${esc(f.texto)}" data-lema="${esc(f.lema || '')}" data-campos="${esc(JSON.stringify((f.campos || []).filter(c => c.nome && c.valor).slice(0, 6)))}"><div class="cartao-ev-capa" style="--chita:url(img/chita-${f.chita}.svg)">${f.imagem_url ? `<img src="${esc(f.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}<span class="festa-estampa" aria-hidden="true"></span>${f.ini ? `<span class="cartao-ev-data"><b>${Number(f.ini.slice(8, 10))}</b>${MESES_ABREV[Number(f.ini.slice(5, 7)) - 1]}</span>` : ''}${f.ini ? `<span class="contagem festa-contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></span>` : ''}</div><div class="cartao-ev-corpo"><span class="selo">Festa</span><strong>${esc(f.nome)}</strong><span>${esc(f.quando)}</span></div></a></li>`).join('')}
+  </ul>
+</section>`;
+// "Conheça a cidade": cada cartão tem espaço para uma foto (painel, aba "Home"); sem foto, mostra a estampa de chita.
+const cartaoExplorar = (chave, href, chita, selo, titulo, texto) => `<a class="explore-card${IMAGENS[chave] ? ' com-foto' : ''}" href="${href}"><span class="explore-foto" style="--chita:url(img/chita-${chita}.svg)">${fotoSite(chave, { classe: '', sizes: '(max-width: 760px) 100vw, 380px' })}</span><span class="explore-txt"><span class="selo">${selo}</span><strong>${titulo}</strong><span>${texto}</span></span></a>`;
+const secaoExplorar = `<section class="secao larg" aria-labelledby="t-explore">
+  <div class="secao-topo"><h2 id="t-explore">Conheça a cidade</h2></div>
+  <div class="explore explore-3">
+    ${cartaoExplorar('lugares', 'lugares.html', 'azul', 'Lugares', 'Praças, igrejas e o rio', `${pontos.length} lugares para conhecer, todos no mapa.`)}
+    ${cartaoExplorar('historia', 'historia.html', 'amarela', 'História', 'De 1769 até hoje', 'A vila à beira do rio, Oswaldo Cruz e a reconstrução depois de 2010.')}
+    ${cartaoExplorar('servicos', 'servicos.html', 'vermelha', 'Serviços', 'Telefones, tempo e avisos', 'Prefeitura, emergências e previsão para a semana.')}
+  </div>
+</section>`;
+// Festa a mais de 45 dias: "Conheça a cidade" sobe e as festas ficam para depois.
+const festasLonge = !proximaFesta || (new Date(proximaFesta.ini + 'T00:00:00Z') - HOJE) / 864e5 > 45;
+
 paginas.push({
   arquivo: 'index.html',
   titulo: 'São Luiz do Paraitinga: agenda ao vivo, festas e lugares',
@@ -158,22 +214,26 @@ paginas.push({
     { '@context': 'https://schema.org', '@type': 'WebSite', name: cfg.nome, inLanguage: 'pt-BR', description: cfg.descricao, ...(URL_SITE ? { url: URL_SITE + '/' } : {}) },
     { '@context': 'https://schema.org', '@type': 'City', name: 'São Luiz do Paraitinga', containedInPlace: { '@type': 'State', name: 'São Paulo' }, geo: { '@type': 'GeoCoordinates', latitude: -23.2219, longitude: -45.3104 } },
   ],
-  dicas: dicasAgenda('<link rel="modulepreload" href="home.js"><link rel="preload" href="data/pontos.json" as="fetch" crossorigin><link rel="preload" href="mapa.svg" as="fetch" crossorigin>'),
+  dicas: dicasAgenda('<link rel="modulepreload" href="home.js"><link rel="preload" href="data/pontos.json" as="fetch" crossorigin><link rel="preload" href="mapa.svg" as="fetch" crossorigin>'
+    + (IMAGENS.capa ? `<link rel="preload" as="image" href="${esc(IMAGENS.capa.url)}" imagesrcset="${esc(IMAGENS.capa.urlP)} 900w, ${esc(IMAGENS.capa.url)} 1800w" imagesizes="(max-width: 899px) 100vw, 420px" fetchpriority="high">` : '')),
   scripts: '<script src="config.js"></script>\n<script type="module" src="home.js"></script>',
   corpo: `<section class="hero larg" aria-labelledby="titulo">
   <div class="hero-grade">
-    <div class="hero-texto">
-      <p class="olho">Vale do Paraíba · São Paulo</p>
-      <h1 id="titulo">São Luiz do Paraitinga</h1>
-      <p class="lema">O que está acontecendo na cidade, ao vivo no mapa.</p>
-      <div class="painel-acoes"><a class="btn" href="agenda.html">Agenda completa</a><a class="btn btn-sec" href="agenda.html#novo">Avisar um evento</a></div>
+    <div class="hero-capa${IMAGENS.capa ? ' com-foto' : ''}" style="--chita:url(img/chita-vermelha.svg)">
+      ${fotoSite('capa', { classe: 'hero-foto', sizes: '(max-width: 899px) 100vw, 420px', prioridade: true, alt: 'Centro histórico de São Luiz do Paraitinga' })}
+      <div class="hero-texto">
+        <p class="olho">Vale do Paraíba · São Paulo</p>
+        <h1 id="titulo">São Luiz do Paraitinga</h1>
+        <p class="lema">Festas, tradição e o que está acontecendo agora na cidade, ao vivo no mapa.</p>
+        <div class="painel-acoes"><a class="btn btn-claro" href="agenda.html">Ver a agenda</a><a class="btn btn-vidro" href="agenda.html#novo">Avisar um evento</a></div>
+      </div>
     </div>
     <div class="mapa-caixa">
       <div id="mapa" class="mapa" role="application" aria-label="Mapa da cidade. Arraste para mover e use os botões para aproximar."></div>
       <div class="mapa-zoom"><button type="button" data-zoom="in" aria-label="Aproximar">+</button><button type="button" data-zoom="out" aria-label="Afastar">−</button><button type="button" data-zoom="reset" aria-label="Voltar à vista inicial">⌂</button></div>
       <article id="mapa-info" class="mapa-info" hidden aria-live="polite"></article>
     </div>
-    <div id="vivo" class="vivo-lista" aria-live="polite"><p class="carregando">Carregando a agenda…</p></div>
+    <div id="vivo" class="vivo-lista" aria-live="polite"><div class="prox-card carregando-card"><span class="prox-data"></span><span class="prox-txt"><span class="sr">Carregando a agenda…</span><span class="esqueleto" style="width:38%" aria-hidden="true"></span><span class="esqueleto" style="width:82%;height:1.1em;margin-top:6px" aria-hidden="true"></span><span class="esqueleto" style="width:60%;margin-top:6px" aria-hidden="true"></span></span></div></div>
   </div>
 </section>
 
@@ -183,22 +243,13 @@ paginas.push({
   <ul id="proximos" class="carrossel" tabindex="0" aria-label="Próximos eventos (role para o lado)"><li class="carregando">Carregando…</li></ul>
 </section>
 
-<section class="secao larg" aria-labelledby="t-festa">
-  <div class="secao-topo"><h2 id="t-festa">Próximas festas</h2>
-    <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Festas anteriores" hidden>${SETA_ESQ}</button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximas festas" hidden>${SETA_DIR}</button><a class="link-seta" href="festas.html">Todas as festas</a></div></div>
-  <ul class="carrossel carrossel-festas" tabindex="0" aria-label="Próximas festas (role para o lado)">
-    ${festasHome.map(f => `<li><a class="cartao-ev cartao-festa" href="${f.pagina}"><div class="cartao-ev-capa" style="--chita:url(img/chita-${f.chita}.svg)">${f.imagem_url ? `<img src="${esc(f.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}<span class="festa-estampa" aria-hidden="true"></span>${f.ini ? `<span class="cartao-ev-data"><b>${Number(f.ini.slice(8, 10))}</b>${MESES_ABREV[Number(f.ini.slice(5, 7)) - 1]}</span>` : ''}${f.ini ? `<span class="contagem festa-contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></span>` : ''}</div><div class="cartao-ev-corpo"><span class="selo">Festa</span><strong>${esc(f.nome)}</strong><span>${esc(f.quando)}</span></div></a></li>`).join('')}
-  </ul>
+<section class="larg secao-cta" aria-label="Avisar um evento">
+  <div class="cta-avisar"><span class="cta-flor" aria-hidden="true">${FLOR}</span><div><strong>Sabe de algo acontecendo na cidade?</strong><span>Avise na agenda: o evento aparece no mapa e nos próximos eventos para todo mundo.</span></div><a class="btn btn-claro" href="agenda.html#novo">Avisar um evento</a></div>
 </section>
 
-<section class="secao larg" aria-labelledby="t-explore">
-  <div class="secao-topo"><h2 id="t-explore">Conheça a cidade</h2></div>
-  <div class="explore explore-3">
-    <a class="explore-card" href="lugares.html"><span class="selo">Lugares</span><strong>Praças, igrejas e o rio</strong><span>${pontos.length} lugares para conhecer, todos no mapa.</span></a>
-    <a class="explore-card" href="historia.html"><span class="selo">História</span><strong>De 1769 até hoje</strong><span>A vila à beira do rio, Oswaldo Cruz e a reconstrução depois de 2010.</span></a>
-    <a class="explore-card" href="servicos.html"><span class="selo">Serviços</span><strong>Telefones, tempo e avisos</strong><span>Prefeitura, emergências e previsão para a semana.</span></a>
-  </div>
-</section>`,
+${festasLonge ? secaoExplorar + '\n\n' + secaoFestas : secaoFestas + '\n\n' + secaoExplorar}
+
+<dialog id="dlg-card" class="modal-card" aria-labelledby="card-titulo"><button type="button" class="card-x" data-fechar-card aria-label="Fechar">×</button><div class="card-modal" id="card-modal"><div id="card-conteudo"></div></div></dialog>`,
 });
 
 paginas.push({
@@ -259,17 +310,33 @@ paginas.push({
   <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Entrar</button></div>
 </form></dialog>
 
-<dialog id="dlg-evento" class="dialogo"><form method="dialog" id="form-evento">
-  <h2>Adicionar evento</h2>
-  <label>O que vai acontecer?<input name="titulo" required minlength="3" maxlength="120" placeholder="Ex.: Dança de fitas, show, missa, feira…"></label>
-  <label>Onde?<input name="local" required minlength="2" maxlength="120" list="locais" placeholder="Ex.: Praça Dr. Oswaldo Cruz"></label>
-  <datalist id="locais">${pontos.map(p => `<option value="${esc(p.nome)}">`).join('')}<option value="Mercado Municipal"></datalist>
-  <div class="linha"><label>Dia<input name="dia" type="date" required></label><label>Começa<input name="hora_ini" type="time" required></label><label>Termina<input name="hora_fim" type="time" required></label></div>
-  <label>Tipo<select name="categoria" id="sel-categoria"></select></label>
-  <label>Detalhes (opcional)<textarea name="descricao" rows="3" maxlength="2000" placeholder="Quem organiza, se é gratuito, o que levar…"></textarea></label>
-  <label class="seletor-foto seletor-capa">Imagem do evento (opcional)<input name="imagem" type="file" accept="image/*"><img id="previa-capa" alt="" hidden><span id="sem-capa">Escolher uma imagem: cartaz, foto do local…</span></label>
-  <p class="erro" role="alert"></p>
-  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Publicar</button></div>
+<dialog id="dlg-evento" class="dialogo dialogo-evento"><form method="dialog" id="form-evento" autocomplete="off">
+  <header class="fe-cab"><h2>Novo evento</h2><button type="button" class="fe-x" data-fechar aria-label="Fechar">×</button></header>
+  <div class="fe-corpo">
+    <label class="campo">Título<small>O projeto ou programa. Ex.: Bosque das Artes</small>
+      <input name="titulo" required minlength="3" maxlength="120" placeholder="Nome do evento" autocapitalize="sentences" enterkeyhint="next"></label>
+    <label class="campo">Subtítulo<small>O assunto ou quem vai se apresentar</small>
+      <input name="subtitulo" maxlength="140" placeholder="Ex.: Camilo Frade e Caio Frade" autocapitalize="sentences" enterkeyhint="next"></label>
+
+    <fieldset class="bloco"><legend>Quando</legend>
+      <div class="atalhos" role="group" aria-label="Atalhos de data"><button type="button" data-dia-atalho="0">Hoje</button><button type="button" data-dia-atalho="1">Amanhã</button><button type="button" data-dia-atalho="sab">Sábado</button><button type="button" data-dia-atalho="dom">Domingo</button></div>
+      <label class="campo">Dia<input name="dia" type="date" required></label>
+      <div class="horas"><label class="campo">Começa<input name="hora_ini" type="time" required></label><label class="campo">Termina<input name="hora_fim" type="time" required></label></div>
+      <label class="marca"><input type="checkbox" name="dia_todo"> Dia todo ou não sei o horário</label>
+    </fieldset>
+
+    <label class="campo">Onde<input name="local" required minlength="2" maxlength="120" list="locais" placeholder="Praça, igreja, rua…" enterkeyhint="next"></label>
+    <datalist id="locais">${pontos.map(p => `<option value="${esc(p.nome)}">`).join('')}</datalist>
+
+    <fieldset class="bloco"><legend>Tipo</legend><div class="tipos" id="tipos-evento"></div></fieldset>
+
+    <label class="campo">Descrição completa<small>Programação, quem organiza, se é gratuito, o que levar</small>
+      <textarea name="descricao" rows="5" maxlength="2000" placeholder="Conte tudo que quem vai precisa saber"></textarea><span class="contador" id="conta-desc" aria-hidden="true">0/2000</span></label>
+
+    <label class="seletor-foto seletor-capa">Cartaz ou imagem (opcional)<input name="imagem" type="file" accept="image/*"><img id="previa-capa" alt="" hidden><span id="sem-capa">Toque para escolher o cartaz ou uma foto</span></label>
+    <p class="erro" role="alert"></p>
+  </div>
+  <footer class="fe-rodape"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Publicar evento</button></footer>
 </form></dialog>
 
 <dialog id="dlg-foto" class="dialogo"><form method="dialog" id="form-foto">
@@ -368,14 +435,15 @@ paginas.push({
   scripts: '<script src="config.js"></script>\n<script type="module" src="admin.js"></script>',
   corpo: `<div class="admin-topo"><div class="larg admin-topo-in">
   <h1>Painel</h1>
-  <nav id="abas" class="abas" aria-label="Seções do painel" hidden><a href="#agenda">Agenda</a><a href="#festas">Festas</a><a href="#usuarios" data-so-admin hidden>Usuários</a></nav>
+  <nav id="abas" class="abas" aria-label="Seções do painel" hidden><a href="#agenda">Agenda</a><a href="#festas">Festas</a><a href="#home">Fotos da home</a><a href="#usuarios" data-so-admin hidden>Usuários</a></nav>
   <div id="admin-conta" class="admin-conta"></div>
 </div></div>
 <section id="admin" class="larg admin-corpo" aria-live="polite"><p class="carregando">Carregando…</p></section>
 
 <dialog id="dlg-evento" class="dialogo"><form method="dialog" id="form-ev">
   <h2 id="ev-titulo-dlg">Evento</h2>
-  <label>Título<input name="titulo" required minlength="3" maxlength="120"></label>
+  <label>Título<small class="ed-dica">O projeto ou programa. Ex.: Bosque das Artes</small><input name="titulo" required minlength="3" maxlength="120"></label>
+  <label>Subtítulo<small class="ed-dica">O assunto ou quem vai se apresentar</small><input name="subtitulo" maxlength="140"></label>
   <label>Local<input name="local" required minlength="2" maxlength="120" list="locais-admin"></label>
   <datalist id="locais-admin">${pontos.map(p => `<option value="${esc(p.nome)}">`).join('')}<option value="Centro histórico"></datalist>
   <label>Tipo<select name="categoria"></select></label>

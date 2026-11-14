@@ -21,8 +21,8 @@
 <link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="../site.css">
 <link rel="preconnect" href="https://smlhkifwlbqsvfsixkvo.supabase.co" crossorigin><link rel="modulepreload" href="../backend.js">
 <link rel="stylesheet" href="../agenda.css"><link rel="stylesheet" href="../admin.css">
@@ -48,16 +48,17 @@
 <main id="conteudo">
 <div class="admin-topo"><div class="larg admin-topo-in">
   <h1>Painel</h1>
-  <nav id="abas" class="abas" aria-label="Seções do painel" hidden><a href="#agenda">Agenda</a><a href="#festas">Festas</a><a href="#usuarios" data-so-admin hidden>Usuários</a></nav>
+  <nav id="abas" class="abas" aria-label="Seções do painel" hidden><a href="#agenda">Agenda</a><a href="#festas">Festas</a><a href="#home">Fotos da home</a><a href="#usuarios" data-so-admin hidden>Usuários</a></nav>
   <div id="admin-conta" class="admin-conta"></div>
 </div></div>
 <section id="admin" class="larg admin-corpo" aria-live="polite"><p class="carregando">Carregando…</p></section>
 
 <dialog id="dlg-evento" class="dialogo"><form method="dialog" id="form-ev">
   <h2 id="ev-titulo-dlg">Evento</h2>
-  <label>Título<input name="titulo" required minlength="3" maxlength="120"></label>
+  <label>Título<small class="ed-dica">O projeto ou programa. Ex.: Bosque das Artes</small><input name="titulo" required minlength="3" maxlength="120"></label>
+  <label>Subtítulo<small class="ed-dica">O assunto ou quem vai se apresentar</small><input name="subtitulo" maxlength="140"></label>
   <label>Local<input name="local" required minlength="2" maxlength="120" list="locais-admin"></label>
-  <datalist id="locais-admin"><option value="Praça Dr. Oswaldo Cruz"><option value="Igreja Matriz São Luís de Tolosa"><option value="Igreja do Rosário"><option value="Capela das Mercês"><option value="Capela Nossa Senhora dos Prazeres"><option value="Casa de Oswaldo Cruz"><option value="Largo do Teatro"><option value="Museu Encuca a Cuca"><option value="Praça do Cruzeiro"><option value="Praça de Eventos"><option value="Parque Linear Urbano"><option value="Prefeitura Municipal"><option value="Santa Casa de Misericórdia"><option value="Rio Paraitinga"><option value="Centro histórico"></datalist>
+  <datalist id="locais-admin"><option value="Praça Dr. Oswaldo Cruz"><option value="Igreja Matriz São Luís de Tolosa"><option value="Igreja do Rosário"><option value="Capela das Mercês"><option value="Capela Nossa Senhora dos Prazeres"><option value="Casa de Oswaldo Cruz"><option value="Largo do Teatro"><option value="Museu Encuca a Cuca"><option value="Praça do Cruzeiro"><option value="Praça de Eventos"><option value="Parque Linear Urbano"><option value="Prefeitura Municipal"><option value="Santa Casa de Misericórdia"><option value="Mercado Municipal"><option value="Rio Paraitinga"><option value="Centro histórico"></datalist>
   <label>Tipo<select name="categoria"></select></label>
   <div class="linha"><label>Começa<input name="inicio" type="datetime-local" required></label><label>Termina<input name="fim" type="datetime-local" required></label></div>
   <label class="check"><input type="checkbox" id="ev-dia-todo"> Dia todo (00:00 a 23:59)</label>
@@ -88,6 +89,7 @@
     <p class="creditos">Mapa: © <a href="https://www.openstreetmap.org/copyright" rel="noopener">colaboradores do OpenStreetMap</a>. Previsão do tempo: Open-Meteo. A agenda é enviada pelos moradores; confirme horários com os organizadores.</p>
   </div>
 </footer>
+
 <script type="module" src="../site.js"></script>
 <script src="../config.js"></script>
 <script type="module" src="../admin.js"></script>

@@ -100,6 +100,15 @@ for (const [re, nome, tipo, texto] of PONTOS) {
   const p = city.pois.find(x => re.test(x.n));
   if (p && p.x > VB.x && p.x < VB.x + VB.w && p.z > VB.y && p.z < VB.y + VB.h) pontos.push({ slug: slug(nome), nome, tipo, texto, x: r(p.x), y: r(p.z) });
 }
+// Lugares que o OpenStreetMap só tem como área (a coleta de lugares pegou só pontos): entram com a latitude/longitude e
+// passam pela mesma conversão em metros que a cidade 3D usa (origem em city.origin, y para o sul).
+const MANUAIS = [
+  { nome: 'Mercado Municipal', tipo: 'cultura', lat: -23.224515, lon: -45.3107889, texto: 'Mercado público da cidade, na Rua Coronel Manoel Bento, que também recebe eventos e apresentações culturais.' },
+];
+for (const m of MANUAIS) {
+  const o = city.origin, x = (m.lon - o.lon) * 111320 * Math.cos(o.lat * Math.PI / 180), y = -(m.lat - o.lat) * 110574;
+  if (x > VB.x && x < VB.x + VB.w && y > VB.y && y < VB.y + VB.h && !pontos.some(p => p.slug === slug(m.nome))) pontos.push({ slug: slug(m.nome), nome: m.nome, tipo: m.tipo, texto: m.texto, x: r(x), y: r(y) });
+}
 if (rio) {
   let best = null; for (let i = 0; i < rio.p.length; i += 2) { const dd = Math.hypot(rio.p[i] + 60, rio.p[i + 1] - 260); if (!best || dd < best.dd) best = { dd, x: rio.p[i], y: rio.p[i + 1] }; }
   pontos.push({ slug: 'rio-paraitinga', nome: 'Rio Paraitinga', tipo: 'praca', texto: 'O rio que corta a cidade. Na cheia é monitorado pela Defesa Civil; fora dela, é procurado para o rafting.', x: r(best.x), y: r(best.y) });

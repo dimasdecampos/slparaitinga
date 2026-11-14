@@ -29,9 +29,17 @@ let eventos = [], registros = [], filtro = 'Todos', eventoFoto = null;
 let mes = primeiroDia(new Date()), diaSel = chave(new Date()), visao = lerVisao();
 
 $('#aviso-demo').hidden = api.modo !== 'demo';
-$('#sel-categoria').innerHTML = CATEGORIAS.map(c => `<option>${esc(c)}</option>`).join('');
+$('#tipos-evento').innerHTML = CATEGORIAS.map((c, i) => `<label class="tipo" style="--c:${corDe(c)}"><input type="radio" name="categoria" value="${esc(c)}"${i === 0 ? ' required' : ''}><span>${esc(c)}</span></label>`).join('');
 
 // ---------- utilidades ----------
+// aviso com botão (ex.: "Evento encerrado. Desfazer")
+function toastAcao(msg, rotulo, fn, ms = 7000) {
+  const t = $('#toast'); t.textContent = msg + ' ';
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'toast-acao'; b.textContent = rotulo;
+  b.onclick = async () => { t.classList.remove('on'); clearTimeout(toast.t); try { await fn(); } catch (err) { toast(err.message); } };
+  t.append(b); t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), ms);
+}
+const ehEquipe = () => ['admin', 'contribuidor'].includes(api.papel?.());
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 3200); }
 function haQuanto(iso) {
   const m = Math.round((Date.now() - new Date(iso)) / 6e4);
@@ -160,7 +168,7 @@ function render() {
         ${e.imagem_url ? `<button type="button" class="capa-btn" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
         <div class="vivo-info">
           <div class="vivo-selos">${terminou ? '<span class="pill-fim">Terminou há pouco</span>' : '<span class="pill-vivo"><span class="ponto"></span>Ao vivo</span>'}<span class="selo">${esc(e.categoria)}</span></div>
-          <h3 id="vivo-t-${e.id}">${esc(e.titulo)}</h3>
+          <h3 id="vivo-t-${e.id}">${esc(e.titulo)}</h3>${e.subtitulo ? `<p class="vivo-sub">${esc(e.subtitulo)}</p>` : ''}
           <div class="onde">📍 ${esc(e.local)} · ${diaTodo(e) ? 'dia todo' : `${hora(e.inicio)}–${hora(e.fim)}`}</div>
           ${e.descricao ? `<p class="desc">${esc(e.descricao)}</p>` : ''}
           <p class="prova">${prova}${e.confirmacoes > 0 && e.ultima_confirmacao ? ` <span class="meta">· última confirmação ${haQuanto(e.ultima_confirmacao)}</span>` : ''}</p>
@@ -175,9 +183,11 @@ function render() {
         <button type="button" class="acao" data-acao="foto"><span aria-hidden="true">📷</span> Foto</button>
       </div>
       ${muralDisponivel || msgs.length ? muralHTML(e, msgs, u) : ''}
-      <p class="fim-aviso">${e.eu_encerrei
+      ${ehEquipe() && agora >= new Date(e.inicio)
+        ? '<p class="fim-aviso fim-equipe"><button type="button" class="encerrar-agora" data-acao="encerrar-agora"><span aria-hidden="true">🏁</span> Terminou · encerrar agora</button><small>Só para a equipe: tira o evento daqui na hora.</small></p>'
+        : `<p class="fim-aviso">${e.eu_encerrei
         ? 'Você avisou que já terminou.'
-        : 'Acabou? <button type="button" class="link" data-acao="encerrar">Avise que já terminou</button>'}${e.encerramentos ? ` · ${e.encerramentos} ${e.encerramentos === 1 ? 'aviso' : 'avisos'} (com 2 o evento sai daqui)` : ''}</p>
+        : 'Acabou? <button type="button" class="link" data-acao="encerrar">Avise que já terminou</button>'}${e.encerramentos ? ` · ${e.encerramentos} ${e.encerramentos === 1 ? 'aviso' : 'avisos'} (com 2 o evento sai daqui)` : ''}</p>`}
     </article>`;
   }).join('') : ''; // sem nada ao vivo, a seção fica só com o título (e o próximo evento)
   restaurarEstadoMural(estado);
@@ -242,7 +252,7 @@ function renderDia() {
     + (evs.length ? evs.map(e => `<article class="ev-card" style="--c:${corDe(e.categoria)}">
         <div class="ev-hora${diaTodo(e) ? ' todo' : ''}">${faixa(e)[0]}<small>${faixa(e)[1]}</small></div>
         <div class="ev-corpo"><div class="selos"><span class="selo">${esc(e.categoria)}</span>${acontecendo(e, agora) ? '<span class="selo ao-vivo">acontecendo agora</span>' : ''}</div>
-          <strong>${esc(e.titulo)}</strong><span class="onde">📍 ${esc(e.local)}</span>
+          <strong>${esc(e.titulo)}</strong>${e.subtitulo ? `<span class="subtitulo">${esc(e.subtitulo)}</span>` : ''}<span class="onde">📍 ${esc(e.local)}</span>
           ${e.descricao ? `<p>${esc(e.descricao)}</p>` : ''}<span class="por">Adicionado por ${esc(e.autor)}</span></div>
       ${e.imagem_url ? `<button type="button" class="ev-capa" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
       </article>`).join('') : `<p class="dia-vazio">${filtro === 'Todos' ? 'Nenhum evento neste dia.' : `Nenhum evento de “${esc(filtro)}” neste dia.`}</p>`)
@@ -257,7 +267,7 @@ function renderLista(vivosIds) {
   $('#proximos').innerHTML = vis.length ? [...grupos].map(([dia, evs]) => `<div class="dia-grupo"><h3>${esc(dia)}</h3>${evs.map(e => `
       <article class="evento-linha" style="--c:${corDe(e.categoria)}">
         <div class="hora${diaTodo(e) ? ' todo' : ''}">${faixa(e)[0]}<small>${faixa(e)[1]}</small></div>
-        <div><span class="selo">${esc(e.categoria)}</span><strong>${esc(e.titulo)}</strong><span class="onde">📍 ${esc(e.local)}</span>
+        <div><span class="selo">${esc(e.categoria)}</span><strong>${esc(e.titulo)}</strong>${e.subtitulo ? `<span class="subtitulo">${esc(e.subtitulo)}</span>` : ''}<span class="onde">📍 ${esc(e.local)}</span>
           ${e.descricao ? `<p>${esc(e.descricao)}</p>` : ''}<span class="por">Adicionado por ${esc(e.autor)}</span></div>
         ${e.imagem_url ? `<button type="button" class="ev-capa" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
       </article>`).join('')}</div>`).join('')
@@ -411,6 +421,14 @@ document.addEventListener('click', async e => {
   }
   if (acao === 'escrever') { if (exigirLogin(() => { muraisAbertos.add(id); render(); focarCompor(id); })) { muraisAbertos.add(id); render(); focarCompor(id); } return; }
   if (acao === 'todas-fotos') { fotosAbertas.has(id) ? fotosAbertas.delete(id) : fotosAbertas.add(id); render(); return; }
+  if (acao === 'encerrar-agora') { // equipe: um clique encerra (com desfazer, caso tenha sido sem querer)
+    const ev = eventos.find(x => x.id === id); if (!ev || !ehEquipe()) return;
+    const antes = ev.fim, novo = new Date(Math.max(Date.now(), new Date(ev.inicio).getTime() + 60000)).toISOString();
+    try { await api.definirFim(id, novo, new Date().toISOString()); } catch (err) { toast(err.message); return; }
+    await carregar();
+    toastAcao('Evento encerrado.', 'Desfazer', async () => { await api.definirFim(id, antes, null); await carregar(); toast('Evento reaberto.'); });
+    return;
+  }
   if (acao === 'encerrar') {
     if (!exigirLogin(() => encerrar(id))) return;
     encerrar(id);
@@ -435,21 +453,42 @@ function abrirNovoEvento(dia) { // dia: AAAA-MM-DD opcional (vem do calendário)
   $('#previa-capa').hidden = true; $('#previa-capa').removeAttribute('src'); $('#sem-capa').hidden = false;
   const hoje = chave(new Date());
   f.dia.min = hoje; f.dia.value = dia && dia >= hoje ? dia : hoje;
+  semHorario(f); contarDescricao(f);
   $('#dlg-evento').showModal();
+  $('.fe-corpo').scrollTop = 0;
 }
+// atalhos de data: hoje, amanhã e o próximo sábado/domingo
+document.querySelectorAll('[data-dia-atalho]').forEach(b => b.addEventListener('click', () => {
+  const f = $('#form-evento'), d = new Date(), a = b.dataset.diaAtalho;
+  if (a === 'sab' || a === 'dom') d.setDate(d.getDate() + (((a === 'sab' ? 6 : 0) - d.getDay() + 7) % 7));
+  else d.setDate(d.getDate() + Number(a));
+  f.dia.value = chave(d);
+}));
+// se não sabe o horário: dia todo (00:00 a 23:59), como no resto da agenda
+function semHorario(f) { const sem = f.dia_todo.checked; f.hora_ini.disabled = f.hora_fim.disabled = sem; f.hora_ini.required = f.hora_fim.required = !sem; }
+$('#form-evento').dia_todo.addEventListener('change', e => semHorario(e.target.form));
+// ao escolher a hora de início, já sugere o fim duas horas depois
+$('#form-evento').hora_ini.addEventListener('change', e => {
+  const f = e.target.form; if (f.hora_fim.value || !e.target.value) return;
+  const [h, m] = e.target.value.split(':').map(Number), total = Math.min(h * 60 + m + 120, 23 * 60 + 59);
+  f.hora_fim.value = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+});
+function contarDescricao(f) { $('#conta-desc').textContent = `${f.descricao.value.length}/2000`; }
+$('#form-evento').descricao.addEventListener('input', e => contarDescricao(e.target.form));
 $('#form-evento').imagem.addEventListener('change', e => { // prévia da imagem do evento
   const arq = e.target.files[0]; if (!arq) return;
   $('#previa-capa').src = URL.createObjectURL(arq); $('#previa-capa').hidden = false; $('#sem-capa').hidden = true;
 });
 $('#form-evento').addEventListener('submit', async e => {
   e.preventDefault(); const f = e.target, btn = f.querySelector('.botao-primario'), erro = f.querySelector('.erro');
-  const inicio = new Date(`${f.dia.value}T${f.hora_ini.value}`); let fim = new Date(`${f.dia.value}T${f.hora_fim.value}`);
+  const diaTodo = f.dia_todo.checked;
+  const inicio = new Date(`${f.dia.value}T${diaTodo ? '00:00' : f.hora_ini.value}`); let fim = new Date(`${f.dia.value}T${diaTodo ? '23:59' : f.hora_fim.value}`);
   if (fim <= inicio) fim = new Date(fim.getTime() + 864e5); // termina depois da meia-noite
   if (fim < Date.now()) { erro.textContent = 'Esse horário já passou.'; return; }
   btn.disabled = true;
   try {
     const arq = f.imagem.files[0], capa = arq ? await comprimir(arq, 1350) : null;
-    await api.criarEvento({ titulo: f.titulo.value.trim(), local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: inicio.toISOString(), fim: fim.toISOString() }, capa);
+    await api.criarEvento({ titulo: f.titulo.value.trim(), subtitulo: f.subtitulo.value.trim() || null, local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: inicio.toISOString(), fim: fim.toISOString() }, capa);
     $('#dlg-evento').close(); toast('Evento publicado na agenda!');
     if (visao === 'mes') { diaSel = chave(inicio); mes = primeiroDia(inicio); } // mostra o evento recém-criado no calendário
     await carregar();

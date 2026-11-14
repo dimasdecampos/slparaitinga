@@ -104,6 +104,14 @@
   "y": 375.7
  },
  {
+  "slug": "mercado-municipal",
+  "nome": "Mercado Municipal",
+  "tipo": "cultura",
+  "texto": "Mercado público da cidade, na Rua Coronel Manoel Bento, que também recebe eventos e apresentações culturais.",
+  "x": 10.4,
+  "y": 281.4
+ },
+ {
   "slug": "rio-paraitinga",
   "nome": "Rio Paraitinga",
   "tipo": "praca",

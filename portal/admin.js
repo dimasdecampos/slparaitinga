@@ -3,6 +3,7 @@
 import { CATEGORIAS, urlImagemEvento, imagemDoSite } from './backend.js';
 import { comprimir } from './imagem.js';
 import { criarFestas } from './admin-festas.js';
+import { criarHome } from './admin-home.js';
 import { ligarSugestoes } from './sugestoes.js';
 
 const cfg = window.AGENDA_CONFIG || {};
@@ -43,6 +44,7 @@ const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/su
 const sb = createClient(cfg.supabaseUrl, cfg.supabaseKey);
 let eu = null, papel = 'anonimo';
 const festasPainel = criarFestas({ app, sb, esc, toast, falha, confirmar, traduzir, slug, cfg, actionsUrl: ACTIONS_URL, usuario: () => eu, papel: () => papel });
+const homePainel = criarHome({ app, sb, esc, toast, falha, confirmar, traduzir, cfg, actionsUrl: ACTIONS_URL, usuario: () => eu });
 
 async function iniciar() {
   const { data: { session } } = await sb.auth.getSession();
@@ -88,7 +90,7 @@ function abrirAba() {
     if (sub === 'editar' && id) return festasPainel.editar(decodeURIComponent(id));
     return festasPainel.lista();
   }
-  ({ agenda: abaAgenda, usuarios: abaUsuarios }[aba] || abaAgenda)();
+  ({ agenda: abaAgenda, home: homePainel.abrir, usuarios: abaUsuarios }[aba] || abaAgenda)();
 }
 
 // ================= AGENDA =================
@@ -103,9 +105,9 @@ async function abaAgenda() {
   app.querySelectorAll('[data-visao]').forEach(b => b.onclick = () => { filtroEv.visao = b.dataset.visao; app.querySelectorAll('[data-visao]').forEach(x => x.setAttribute('aria-pressed', x === b)); listarEventos(); });
   const { data, error } = await sb.rpc('equipe_eventos');
   if (error) return falha(error);
-  const { data: imgs } = await sb.from('eventos').select('id, imagem').not('imagem', 'is', null);
-  const porId = new Map((imgs || []).map(x => [x.id, x.imagem]));
-  eventos = data.map(e => ({ ...e, imagem: porId.get(e.id) || null })); listarEventos();
+  const { data: extras } = await sb.from('eventos').select('id, imagem, subtitulo'); // a função da equipe não traz imagem nem subtítulo
+  const porId = new Map((extras || []).map(x => [x.id, x]));
+  eventos = data.map(e => ({ ...e, imagem: porId.get(e.id)?.imagem || null, subtitulo: porId.get(e.id)?.subtitulo || null })); listarEventos();
 }
 function listarEventos() {
   const agora = Date.now(), q = filtroEv.busca.trim().toLowerCase();
@@ -116,7 +118,7 @@ function listarEventos() {
   $('#lista-ev').innerHTML = lista.length ? `<table class="tabela"><thead><tr><th>Quando</th><th>Evento</th><th>Tipo</th><th>Adicionado por</th><th><span class="sr">Ações</span></th></tr></thead><tbody>
     ${lista.map(e => `<tr data-id="${e.id}"${e.oculto ? ' class="apagado"' : ''}>
       <td data-rotulo="Quando">${esc(dataHora(e.inicio))}</td>
-      <td data-rotulo="Evento">${e.imagem ? `<img class="mini-capa" src="${esc(urlImagemEvento(e.imagem))}" alt="" loading="lazy">` : ''}<b>${esc(e.titulo)}</b><small>${esc(e.local)}</small>${e.oculto ? '<span class="tag tag-cinza">Oculto</span>' : ''}${e.denuncias ? `<span class="tag tag-vermelha">${e.denuncias} ${e.denuncias === 1 ? 'denúncia' : 'denúncias'}</span>` : ''}</td>
+      <td data-rotulo="Evento">${e.imagem ? `<img class="mini-capa" src="${esc(urlImagemEvento(e.imagem))}" alt="" loading="lazy">` : ''}<b>${esc(e.titulo)}</b>${e.subtitulo ? `<small class="sub-linha">${esc(e.subtitulo)}</small>` : ''}<small>${esc(e.local)}</small>${e.oculto ? '<span class="tag tag-cinza">Oculto</span>' : ''}${e.denuncias ? `<span class="tag tag-vermelha">${e.denuncias} ${e.denuncias === 1 ? 'denúncia' : 'denúncias'}</span>` : ''}</td>
       <td data-rotulo="Tipo">${esc(e.categoria)}</td>
       <td data-rotulo="Por">${esc(e.autor || '—')}</td>
       <td class="acoes-linha"><button type="button" class="botao-sec" data-ev-editar>Editar</button><button type="button" class="botao-sec" data-ev-ocultar>${e.oculto ? 'Mostrar' : 'Ocultar'}</button><button type="button" class="botao-sec perigo" data-ev-excluir>Excluir</button></td>
@@ -145,7 +147,7 @@ function editarEvento(ev) {
   $('#ev-titulo-dlg').textContent = ev ? 'Editar evento' : 'Novo evento';
   f.categoria.innerHTML = CATEGORIAS.map(c => `<option>${esc(c)}</option>`).join('');
   if (ev) {
-    f.titulo.value = ev.titulo; f.local.value = ev.local; f.categoria.value = ev.categoria; f.descricao.value = ev.descricao || '';
+    f.titulo.value = ev.titulo; f.subtitulo.value = ev.subtitulo || ''; f.local.value = ev.local; f.categoria.value = ev.categoria; f.descricao.value = ev.descricao || '';
     f.inicio.value = paraInput(ev.inicio); f.fim.value = paraInput(ev.fim);
   }
   const previa = $('#ev-previa'), atual = ev?.imagem ? urlImagemEvento(ev.imagem) : null;
@@ -155,7 +157,7 @@ function editarEvento(ev) {
     e.preventDefault();
     const ini = new Date(f.inicio.value), fim = new Date(f.fim.value);
     if (!(fim > ini)) { f.querySelector('.erro').textContent = 'O fim precisa ser depois do início.'; return; }
-    const dados = { titulo: f.titulo.value.trim(), local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: ini.toISOString(), fim: fim.toISOString() };
+    const dados = { titulo: f.titulo.value.trim(), subtitulo: f.subtitulo.value.trim() || null, local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: ini.toISOString(), fim: fim.toISOString() };
     // imagem: nova (envia reduzida), remover, ou manter a atual
     const arq = f.imagem.files[0];
     let nova = null;
