@@ -280,3 +280,8 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .festa-quando { padding: 14px 18px; background: var(--cartao); border-radius: 16px; box-shadow: var(--sombra); }
 .veja-tambem { padding-left: 1.2em; }
 .festa-quando .contagem { display: inline-block; margin-left: 8px; font-weight: 700; font-size: .85rem; background: var(--papel); padding: 3px 10px; border-radius: 999px; }
+/* próximo evento no mapa (quando nada está ao vivo): amarelo e parado */
+.proximo-marca .nucleo { fill: var(--ouro); }
+.proximo-marca .b-agora { fill: #ffd66b; }
+.mapa-info .ao-vivo.proximo { background: #fff8e1; border-color: #f3dc9a; }
+.mapa-info .ao-vivo.proximo .vivo-titulo { color: #8a6400; }

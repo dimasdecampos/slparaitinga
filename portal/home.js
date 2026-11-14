@@ -4,6 +4,7 @@ import { criarBackend, janelaAberta, acontecendo } from './backend.js';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\b(dr|doutor|de|do|da|dos|das)\b\.?/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+const maiuscula = s => s.charAt(0).toUpperCase() + s.slice(1);
 const corta = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const hora = d => new Date(d).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -28,6 +29,18 @@ function lugarDe(ev) {
   return pontos.find(p => { const b = norm(p.nome); return a.includes(b) || b.includes(a); }) || null;
 }
 const vivosEm = p => vivos.filter(e => lugarDe(e) === p);
+// Sem nada ao vivo, o mapa destaca o próximo evento. Local genérico ("Centro histórico", "São Luiz do Paraitinga")
+// vai para a praça principal; eventos fora do mapa (ex.: Catuçaba) e feriados nacionais são pulados.
+const GENERICO = /^(centro( historico)?|sao luiz( paraitinga)?|cidade)$/;
+function proximoNoMapa() {
+  if (vivos.length) return null;
+  for (const e of eventos) {
+    if (new Date(e.inicio) <= Date.now() || FERIADO_NACIONAL.test(e.titulo)) continue;
+    const p = lugarDe(e) || (GENERICO.test(norm(e.local)) ? pontos[0] : null);
+    if (p) return { e, p };
+  }
+  return null;
+}
 
 const pedido = new URLSearchParams(location.search).get('lugar');
 const mapa = svgTexto ? montarMapa() : null;
@@ -63,7 +76,7 @@ function renderPainel() {
         <span>${esc(e.local)} · ${ate(e)}</span>${e.confirmacoes ? `<span class="conf">✔ ${e.confirmacoes} ${e.confirmacoes === 1 ? 'pessoa confirmou' : 'pessoas confirmaram'}</span>` : ''}</button>`).join('')
       + (demo ? '<p class="demo-nota">Demonstração: estes eventos são fictícios e somem quando a agenda for ligada ao banco de dados.</p>' : '');
   } else {
-    const prox = eventos.find(e => new Date(e.inicio) > Date.now());
+    const prox = proximoNoMapa()?.e || eventos.find(e => new Date(e.inicio) > Date.now() && !FERIADO_NACIONAL.test(e.titulo));
     el.innerHTML = `<p class="vivo-nada">Nada marcado neste momento.${prox ? ` <b>Próximo:</b> ${esc(prox.titulo)}, ${quando(prox.inicio)}.` : ' Sabe de algo? Avise na agenda.'}</p>`;
   }
 }
@@ -177,6 +190,24 @@ function montarMapa() {
       for (const t of [t1, t2, t3]) t.setAttribute('x', -larg / 2 + 14);
       marcas.push({ g: m, p });
     }
+    const prox = proximoNoMapa();
+    if (prox) { // nada ao vivo: destaca o próximo evento (ponto amarelo parado, sem a onda do "ao vivo")
+      const { e, p } = prox, d = new Date(e.inicio);
+      const dia = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '').toUpperCase();
+      const m = novo('g', { class: 'vivo-marca proximo-marca', tabindex: 0, role: 'button', 'aria-label': `Próximo evento: ${e.titulo}, ${quando(e.inicio)}, ${p.nome}` }, camadaVivos);
+      m.dataset.slug = p.slug;
+      novo('circle', { class: 'nucleo', r: 9 }, m);
+      const b = novo('g', { class: 'balao' }, m), H = 64, base = -22;
+      const caixa = novo('rect', { rx: 12, height: H, y: base - H }, b); novo('path', { d: `M-9 ${base - 1} L0 ${base + 9} L9 ${base - 1}Z` }, b);
+      const t1 = novo('text', { class: 'b-agora', y: base - H + 19 }, b); t1.textContent = `PRÓXIMO · ${dia}${diaTodo(e) ? '' : `, ${hora(d)}`}`;
+      const t2 = novo('text', { class: 'b-titulo', y: base - H + 38 }, b); t2.textContent = corta(e.titulo, 30);
+      const t3 = novo('text', { class: 'b-local', y: base - H + 54 }, b); t3.textContent = corta(lugarDe(e) ? p.nome : e.local, 34);
+      const medir = t => { try { return t.getComputedTextLength(); } catch { return 0; } };
+      const larg = Math.max(150, ...[t1, t2, t3].map(t => medir(t) || t.textContent.length * 7.6)) + 28;
+      caixa.setAttribute('width', larg); caixa.setAttribute('x', -larg / 2);
+      for (const t of [t1, t2, t3]) t.setAttribute('x', -larg / 2 + 14);
+      marcas.push({ g: m, p });
+    }
     aplicar();
     if (!info.hidden && info.dataset.slug) { const p = pontos.find(x => x.slug === info.dataset.slug); if (p) abrirInfo(p); }
   }
@@ -191,7 +222,9 @@ function montarMapa() {
       ${evs.map(e => { const fotos = registros.filter(r => r.evento_id === e.id && r.foto_url).slice(0, 4);
         return `<div class="ao-vivo"><p class="vivo-titulo"><span class="ponto-vivo"></span>Acontecendo agora</p><strong>${esc(e.titulo)}${demo ? '<span class="tag-exemplo">exemplo</span>' : ''}</strong><span>${ate(e)}${e.confirmacoes ? ` · ✔ ${e.confirmacoes} ${e.confirmacoes === 1 ? 'confirmação' : 'confirmações'}` : ''}</span>
           ${fotos.length ? `<div class="fotinhas">${fotos.map(r => `<img src="${esc(r.foto_url)}" alt="${esc(r.legenda)}" loading="lazy">`).join('')}</div>` : ''}</div>`; }).join('')}
-      <div class="acoes-info">${evs.length ? '<a class="link-seta" href="agenda.html">Confirmar ou enviar foto</a>' : ''}<a class="link-seta" href="lugares.html#${p.slug}">Sobre este lugar</a></div>`;
+      ${(() => { const prox = proximoNoMapa(); if (!prox || prox.p !== p) return ''; const e = prox.e;
+        return `<div class="ao-vivo proximo"><p class="vivo-titulo">Próximo evento</p><strong>${esc(e.titulo)}</strong><span>${esc(maiuscula(quando(e.inicio)))}${lugarDe(e) ? '' : ` · ${esc(e.local)}`}</span></div>`; })()}
+      <div class="acoes-info">${evs.length ? '<a class="link-seta" href="agenda.html">Confirmar ou enviar foto</a>' : proximoNoMapa()?.p === p ? '<a class="link-seta" href="agenda.html">Ver na agenda</a>' : ''}<a class="link-seta" href="lugares.html#${p.slug}">Sobre este lugar</a></div>`;
     info.hidden = false;
     info.querySelector('.fechar').onclick = fecharInfo;
   }
