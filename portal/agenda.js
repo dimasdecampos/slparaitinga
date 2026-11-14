@@ -179,8 +179,14 @@ function render() {
         ? 'Você avisou que já terminou.'
         : 'Acabou? <button type="button" class="link" data-acao="encerrar">Avise que já terminou</button>'}${e.encerramentos ? ` · ${e.encerramentos} ${e.encerramentos === 1 ? 'aviso' : 'avisos'} (com 2 o evento sai daqui)` : ''}</p>
     </article>`;
-  }).join('') : `<p class="nada-agora">Nenhum evento acontecendo neste momento. Sabe de algo rolando? <a href="#" data-acao="novo">Adicione na agenda</a>.</p>`;
+  }).join('') : ''; // sem nada ao vivo, a seção fica só com o título (e o próximo evento)
   restaurarEstadoMural(estado);
+  // Sem nada ao vivo: título curto e uma linha com o próximo evento, em vez de um bloco vazio.
+  const prox = eventos.find(e => new Date(e.inicio) > agora);
+  $('#t-agora-txt').textContent = vivos.length ? 'Acontecendo agora' : 'Nada acontecendo agora';
+  const linhaProx = $('#agora-proximo');
+  if (!vivos.length && prox) { linhaProx.hidden = false; linhaProx.innerHTML = `<b>Próximo:</b> ${esc(prox.titulo)}, ${esc(rotuloDia(prox.inicio).toLowerCase())}${diaTodo(prox) ? '' : ` às ${hora(prox.inicio)}`} · ${esc(prox.local)}`; } else linhaProx.hidden = true;
+  $('#bloco-agora').classList.toggle('compacto', !vivos.length);
 
   renderFiltro();
   renderBarra();

@@ -81,6 +81,11 @@
 .notas li { background: var(--papel); border: 1px solid var(--linha); border-radius: 10px; padding: 8px 12px; font-size: .9rem; }
 .notas li span { color: var(--suave); font-size: .78rem; margin-left: 6px; }
 .notas .denunciar { all: unset; cursor: pointer; font-size: .72rem; color: var(--suave); text-decoration: underline; margin-left: 8px; }
+.agora-titulo { min-width: 0; }
+.agora-proximo { margin: 3px 0 0 22px; font-size: .92rem; color: var(--suave); }
+.agora-proximo b { color: var(--tinta); }
+.lista-agora:empty { display: none; }
+#bloco-agora.compacto .cabecalho-secao { margin: 14px 0 4px; }
 .nada-agora { background: var(--cartao); border-radius: 14px; padding: 18px 20px; box-shadow: var(--sombra); color: var(--suave); }
 
 /* próximos */

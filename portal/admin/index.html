@@ -68,23 +68,11 @@
   <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar</button></div>
 </form></dialog>
 
-<dialog id="dlg-festa" class="dialogo dialogo-largo"><form method="dialog" id="form-festa">
-  <h2 id="festa-titulo-dlg">Festa</h2>
-  <div class="linha"><label>Nome<input name="nome" required minlength="2" maxlength="120"></label><label>Endereço da página<span class="prefixo">/festas/<input name="id_festa" required pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Só letras minúsculas, números e hífen" maxlength="80">.html</span></label></div>
-  <label>Resumo (aparece no cartão em Festas)<textarea name="resumo" rows="2" required maxlength="400"></textarea></label>
-  <div class="linha"><label>Linha acima do título<input name="olho" maxlength="60" placeholder="Ex.: Maio ou junho"></label><label>Estampa<select name="chita"></select></label><label>Ordem<input name="ordem" type="number" min="0" max="999"></label></div>
-  <label>Subtítulo<input name="lema" maxlength="200"></label>
-  <fieldset class="grupo"><legend>Quando acontece</legend>
-    <div class="radios"><label class="check"><input type="radio" name="data_tipo" value="pascoa"> Em relação à Páscoa</label><label class="check"><input type="radio" name="data_tipo" value="fixa"> Dia fixo no ano</label><label class="check"><input type="radio" name="data_tipo" value="livre"> Só texto</label></div>
-    <div class="linha" data-campo-data="pascoa"><label>Começa (dias da Páscoa)<input name="pascoa_ini" type="number" min="-120" max="120"></label><label>Termina (dias da Páscoa)<input name="pascoa_fim" type="number" min="-120" max="120"></label><small>Negativo é antes da Páscoa. Ex.: Carnaval -51 a -47; Divino 40 a 49.</small></div>
-    <div class="linha" data-campo-data="fixa"><label>Começa<input name="fixa_ini" type="date"></label><label>Termina<input name="fixa_fim" type="date"></label><small>O ano é ignorado: a festa se repete todo ano nesse dia.</small></div>
-    <div data-campo-data="livre"><label>Texto da data<input name="quando_texto" maxlength="120" placeholder="Ex.: Em janeiro, antes do Carnaval"></label></div>
-  </fieldset>
-  <fieldset class="grupo"><legend>Conteúdo da página</legend><div id="secoes-ed"></div><button type="button" class="botao-sec" id="add-secao">+ Adicionar seção</button></fieldset>
-  <fieldset class="grupo"><legend>Veja também</legend><div id="veja-ed" class="checks"></div></fieldset>
-  <label class="check"><input type="checkbox" name="publicada"> Publicada (desmarque para deixar como rascunho)</label>
-  <p class="erro" role="alert"></p>
-  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar festa</button></div>
+<dialog id="dlg-link" class="dialogo"><form method="dialog" id="form-link">
+  <h2>Inserir link</h2>
+  <label>Endereço<input id="link-url" type="text" inputmode="url" maxlength="2000" placeholder="https://… ou historia.html" autocomplete="off"></label>
+  <small class="ed-dica">Selecione antes o texto que vai virar link. Deixe vazio para cancelar.</small>
+  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Aplicar</button></div>
 </form></dialog>
 
 <dialog id="dlg-confirmar" class="dialogo"><form method="dialog">

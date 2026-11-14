@@ -28,6 +28,8 @@ const SUPABASE_KEY = (CONFIG_JS.match(/supabaseKey:\s*'([^']+)'/) || [])[1];
 
 // As festas vêm do banco (painel /admin). A regra da data vira uma função: dias em relação à Páscoa ou dia fixo no ano.
 const { carregarFestas, gerar: gerarFestas } = await import('./festas-conteudo.mjs');
+const { limparHtml, secoesParaHtml } = await import('./html-seguro.mjs');
+const urlImagemFesta = caminho => (caminho && SUPABASE ? `${SUPABASE}/storage/v1/object/public/festas/${caminho.split('/').map(encodeURIComponent).join('/')}` : null);
 const regraDatas = f => {
   if (f.data_tipo === 'pascoa' && Number.isInteger(f.pascoa_ini)) return y => [mais(pascoa(y), f.pascoa_ini), mais(pascoa(y), f.pascoa_fim ?? f.pascoa_ini)];
   if (f.data_tipo === 'fixa' && f.fixa_ini) {
@@ -37,7 +39,9 @@ const regraDatas = f => {
   return null;
 };
 const FESTAS = (await carregarFestas({ supabaseUrl: SUPABASE, supabaseKey: SUPABASE_KEY })).map(f => ({
-  id: f.id, nome: f.nome, chita: f.chita, texto: f.resumo, olho: f.olho, lema: f.lema, secoes: f.secoes, veja: f.veja,
+  id: f.id, nome: f.nome, chita: f.chita, texto: f.resumo, olho: f.olho, lema: f.lema, veja: f.veja,
+  // conteúdo do editor (HTML limpo aqui de novo, por segurança); festas antigas ainda em seções viram HTML na hora
+  conteudo: f.conteudo ? limparHtml(f.conteudo) : secoesParaHtml(f.secoes), campos: Array.isArray(f.campos) ? f.campos : [], imagem_url: urlImagemFesta(f.imagem),
   quando: f.quando_texto || 'Data a confirmar', datas: regraDatas(f),
 })).map(f => {
   if (!f.datas) return f;
@@ -183,7 +187,7 @@ paginas.push({
   <div class="secao-topo"><h2 id="t-festa">Próximas festas</h2>
     <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Festas anteriores" hidden>${SETA_ESQ}</button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximas festas" hidden>${SETA_DIR}</button><a class="link-seta" href="festas.html">Todas as festas</a></div></div>
   <ul class="carrossel carrossel-festas" tabindex="0" aria-label="Próximas festas (role para o lado)">
-    ${festasHome.map(f => `<li><a class="cartao-ev cartao-festa" href="${f.pagina}"><div class="cartao-ev-capa" style="--chita:url(img/chita-${f.chita}.svg)"><span class="festa-estampa" aria-hidden="true"></span>${f.ini ? `<span class="cartao-ev-data"><b>${Number(f.ini.slice(8, 10))}</b>${MESES_ABREV[Number(f.ini.slice(5, 7)) - 1]}</span>` : ''}${f.ini ? `<span class="contagem festa-contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></span>` : ''}</div><div class="cartao-ev-corpo"><span class="selo">Festa</span><strong>${esc(f.nome)}</strong><span>${esc(f.quando)}</span></div></a></li>`).join('')}
+    ${festasHome.map(f => `<li><a class="cartao-ev cartao-festa" href="${f.pagina}"><div class="cartao-ev-capa" style="--chita:url(img/chita-${f.chita}.svg)">${f.imagem_url ? `<img src="${esc(f.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}<span class="festa-estampa" aria-hidden="true"></span>${f.ini ? `<span class="cartao-ev-data"><b>${Number(f.ini.slice(8, 10))}</b>${MESES_ABREV[Number(f.ini.slice(5, 7)) - 1]}</span>` : ''}${f.ini ? `<span class="contagem festa-contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></span>` : ''}</div><div class="cartao-ev-corpo"><span class="selo">Festa</span><strong>${esc(f.nome)}</strong><span>${esc(f.quando)}</span></div></a></li>`).join('')}
   </ul>
 </section>
 
@@ -209,7 +213,7 @@ paginas.push({
 <div id="aviso-demo" class="aviso-demo" hidden><strong>Modo demonstração.</strong> Os eventos e fotos marcados “exemplo” são fictícios, e o que você adicionar fica só neste navegador. Ao ligar o banco de dados, a agenda passa a ser compartilhada por todos.</div>
 <div class="agenda-pagina">
   <section aria-labelledby="t-agora" id="bloco-agora">
-    <div class="cabecalho-secao"><h2 id="t-agora"><span class="ponto-vivo" id="ponto-agora" aria-hidden="true"></span>Acontecendo agora</h2><button type="button" class="botao-primario" id="novo-evento">+ Adicionar evento</button></div>
+    <div class="cabecalho-secao"><div class="agora-titulo"><h2 id="t-agora"><span class="ponto-vivo" id="ponto-agora" aria-hidden="true"></span><span id="t-agora-txt">Acontecendo agora</span></h2><p id="agora-proximo" class="agora-proximo" hidden></p></div><button type="button" class="botao-primario" id="novo-evento">+ Adicionar evento</button></div>
     <div id="agora" class="lista-agora"></div>
   </section>
   <section aria-labelledby="cal-titulo" id="bloco-cal">
@@ -289,7 +293,7 @@ paginas.push({
 <div class="chita-faixa" aria-hidden="true"></div>
 <section class="secao larg">
   <div class="festas">
-    ${FESTAS.map(f => `<article class="festa" id="${f.id}"><div class="festa-topo" style="--chita:url(img/chita-${f.chita}.svg)"></div><div class="festa-corpo"><p class="quando">${f.ini ? `<time datetime="${f.ini}">${esc(f.quando)}</time>` : esc(f.quando)}</p><h2><a href="${f.pagina}">${esc(f.nome)}</a></h2><p>${esc(f.texto)}</p>${f.ini ? `<p class="contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></p>` : ''}<p class="mais"><a class="link-seta" href="${f.pagina}">História e detalhes</a></p></div></article>`).join('\n    ')}
+    ${FESTAS.map(f => `<article class="festa" id="${f.id}"><div class="festa-topo${f.imagem_url ? ' com-imagem' : ''}" style="--chita:url(img/chita-${f.chita}.svg)">${f.imagem_url ? `<img src="${esc(f.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}</div><div class="festa-corpo"><p class="quando">${f.ini ? `<time datetime="${f.ini}">${esc(f.quando)}</time>` : esc(f.quando)}</p><h2><a href="${f.pagina}">${esc(f.nome)}</a></h2><p>${esc(f.texto)}</p>${f.ini ? `<p class="contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></p>` : ''}<p class="mais"><a class="link-seta" href="${f.pagina}">História e detalhes</a></p></div></article>`).join('\n    ')}
   </div>
   <p class="nota">As datas seguem o calendário religioso e popular e podem mudar. Confirme a programação com a Prefeitura e os organizadores. Eventos do dia a dia ficam na <a href="agenda.html">agenda da cidade</a>.</p>
 </section>`,
@@ -384,23 +388,11 @@ paginas.push({
   <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar</button></div>
 </form></dialog>
 
-<dialog id="dlg-festa" class="dialogo dialogo-largo"><form method="dialog" id="form-festa">
-  <h2 id="festa-titulo-dlg">Festa</h2>
-  <div class="linha"><label>Nome<input name="nome" required minlength="2" maxlength="120"></label><label>Endereço da página<span class="prefixo">/festas/<input name="id_festa" required pattern="[a-z0-9]+(-[a-z0-9]+)*" title="Só letras minúsculas, números e hífen" maxlength="80">.html</span></label></div>
-  <label>Resumo (aparece no cartão em Festas)<textarea name="resumo" rows="2" required maxlength="400"></textarea></label>
-  <div class="linha"><label>Linha acima do título<input name="olho" maxlength="60" placeholder="Ex.: Maio ou junho"></label><label>Estampa<select name="chita"></select></label><label>Ordem<input name="ordem" type="number" min="0" max="999"></label></div>
-  <label>Subtítulo<input name="lema" maxlength="200"></label>
-  <fieldset class="grupo"><legend>Quando acontece</legend>
-    <div class="radios">${opcoesData.map(([v, t]) => `<label class="check"><input type="radio" name="data_tipo" value="${v}"> ${t}</label>`).join('')}</div>
-    <div class="linha" data-campo-data="pascoa"><label>Começa (dias da Páscoa)<input name="pascoa_ini" type="number" min="-120" max="120"></label><label>Termina (dias da Páscoa)<input name="pascoa_fim" type="number" min="-120" max="120"></label><small>Negativo é antes da Páscoa. Ex.: Carnaval -51 a -47; Divino 40 a 49.</small></div>
-    <div class="linha" data-campo-data="fixa"><label>Começa<input name="fixa_ini" type="date"></label><label>Termina<input name="fixa_fim" type="date"></label><small>O ano é ignorado: a festa se repete todo ano nesse dia.</small></div>
-    <div data-campo-data="livre"><label>Texto da data<input name="quando_texto" maxlength="120" placeholder="Ex.: Em janeiro, antes do Carnaval"></label></div>
-  </fieldset>
-  <fieldset class="grupo"><legend>Conteúdo da página</legend><div id="secoes-ed"></div><button type="button" class="botao-sec" id="add-secao">+ Adicionar seção</button></fieldset>
-  <fieldset class="grupo"><legend>Veja também</legend><div id="veja-ed" class="checks"></div></fieldset>
-  <label class="check"><input type="checkbox" name="publicada"> Publicada (desmarque para deixar como rascunho)</label>
-  <p class="erro" role="alert"></p>
-  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar festa</button></div>
+<dialog id="dlg-link" class="dialogo"><form method="dialog" id="form-link">
+  <h2>Inserir link</h2>
+  <label>Endereço<input id="link-url" type="text" inputmode="url" maxlength="2000" placeholder="https://… ou historia.html" autocomplete="off"></label>
+  <small class="ed-dica">Selecione antes o texto que vai virar link. Deixe vazio para cancelar.</small>
+  <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Aplicar</button></div>
 </form></dialog>
 
 <dialog id="dlg-confirmar" class="dialogo"><form method="dialog">

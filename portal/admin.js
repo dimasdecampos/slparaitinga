@@ -2,6 +2,7 @@
 // Quem pode o quê é decidido no banco (RLS e funções em supabase/admin.sql); aqui só escondemos o que a pessoa não pode usar.
 import { CATEGORIAS, urlImagemEvento, imagemDoSite } from './backend.js';
 import { comprimir } from './imagem.js';
+import { criarFestas } from './admin-festas.js';
 import { ligarSugestoes } from './sugestoes.js';
 
 const cfg = window.AGENDA_CONFIG || {};
@@ -41,6 +42,7 @@ if (!cfg.supabaseUrl) { app.innerHTML = '<p class="vazio">O banco de dados não 
 const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
 const sb = createClient(cfg.supabaseUrl, cfg.supabaseKey);
 let eu = null, papel = 'anonimo';
+const festasPainel = criarFestas({ app, sb, esc, toast, falha, confirmar, traduzir, slug, cfg, actionsUrl: ACTIONS_URL, usuario: () => eu, papel: () => papel });
 
 async function iniciar() {
   const { data: { session } } = await sb.auth.getSession();
@@ -76,10 +78,17 @@ function telaEntrar() {
 
 // ---------- abas ----------
 function abrirAba() {
-  let aba = location.hash.slice(1) || 'agenda';
+  const [rota, sub, id] = (location.hash.slice(1) || 'agenda').split('/');
+  let aba = rota;
   if (aba === 'usuarios' && papel !== 'admin') aba = 'agenda';
+  festasPainel.sair(); // desfaz o que a tela de edição deixou (aviso de saída, ouvintes)
   document.querySelectorAll('#abas a').forEach(a => a.setAttribute('aria-current', a.hash === '#' + aba ? 'page' : 'false'));
-  ({ agenda: abaAgenda, festas: abaFestas, usuarios: abaUsuarios }[aba] || abaAgenda)();
+  if (aba === 'festas') {
+    if (sub === 'nova') return festasPainel.editar(null);
+    if (sub === 'editar' && id) return festasPainel.editar(decodeURIComponent(id));
+    return festasPainel.lista();
+  }
+  ({ agenda: abaAgenda, usuarios: abaUsuarios }[aba] || abaAgenda)();
 }
 
 // ================= AGENDA =================
@@ -174,92 +183,7 @@ $('#ev-dia-todo').addEventListener('change', e => {
   f.inicio.value = `${dia}T00:00`; f.fim.value = `${(f.fim.value || dia).slice(0, 10)}T23:59`;
 });
 
-// ================= FESTAS =================
-let festas = [];
-async function abaFestas() {
-  app.innerHTML = `<div class="barra"><h2>Festas</h2><button type="button" class="btn" id="nova-festa">+ Nova festa</button></div>
-    <p class="aviso-admin">As páginas das festas são geradas a cada hora. Depois de salvar, a mudança aparece no site em até 1 hora, ou <a href="${ACTIONS_URL}" target="_blank" rel="noopener">publique agora pelo GitHub</a> (botão “Run workflow”).</p>
-    <div id="lista-festas"><p class="carregando">Carregando…</p></div>`;
-  $('#nova-festa').onclick = () => editarFesta();
-  const { data, error } = await sb.from('festas').select('*').order('ordem');
-  if (error) return falha(error);
-  festas = data;
-  $('#lista-festas').innerHTML = festas.length ? `<ul class="cards-festas">${festas.map(f => `<li data-festa="${esc(f.id)}">
-    <span class="amostra" style="--chita:url(../img/chita-${esc(f.chita)}.svg)"></span>
-    <div><b>${esc(f.nome)}</b><small>${esc(resumoData(f))} · /festas/${esc(f.id)}.html</small>${f.publicada ? '' : '<span class="tag tag-cinza">Rascunho</span>'}</div>
-    <div class="acoes-linha"><a class="botao-sec" href="../festas/${esc(f.id)}.html" target="_blank" rel="noopener">Ver</a><button type="button" class="botao-sec" data-festa-editar>Editar</button>${papel === 'admin' ? '<button type="button" class="botao-sec perigo" data-festa-excluir>Excluir</button>' : ''}</div></li>`).join('')}</ul>` : '<p class="vazio">Nenhuma festa cadastrada.</p>';
-}
-function resumoData(f) {
-  if (f.data_tipo === 'pascoa') { const d = n => (n === 0 ? 'na Páscoa' : `${Math.abs(n)} dias ${n < 0 ? 'antes' : 'depois'} da Páscoa`); return f.pascoa_ini === f.pascoa_fim ? d(f.pascoa_ini) : `de ${d(f.pascoa_ini)} até ${d(f.pascoa_fim)}`; }
-  if (f.data_tipo === 'fixa') { const d = s => s.split('-').reverse().join('/'); return f.fixa_ini === f.fixa_fim || !f.fixa_fim ? `todo ${d(f.fixa_ini)}` : `de ${d(f.fixa_ini)} a ${d(f.fixa_fim)}`; }
-  return f.quando_texto || 'data livre';
-}
-app.addEventListener('click', async e => {
-  const li = e.target.closest('[data-festa]'); if (!li) return;
-  const f = festas.find(x => x.id === li.dataset.festa);
-  if (e.target.closest('[data-festa-editar]')) return editarFesta(f);
-  if (e.target.closest('[data-festa-excluir]') && await confirmar(`Excluir a festa "${f.nome}"? A página dela sai do site na próxima publicação.`)) {
-    const { error } = await sb.from('festas').delete().eq('id', f.id);
-    if (error) return falha(error);
-    toast('Festa excluída.'); abaFestas();
-  }
-});
-function secaoHTML(s = { titulo: '', paragrafos: [] }) {
-  return `<fieldset class="secao-ed"><div class="secao-topo-ed"><input name="sec-titulo" required maxlength="120" placeholder="Título da seção" value="${esc(s.titulo)}" aria-label="Título da seção">
-    <span><button type="button" class="icone-mini" data-sec="subir" aria-label="Subir seção">↑</button><button type="button" class="icone-mini" data-sec="descer" aria-label="Descer seção">↓</button><button type="button" class="icone-mini perigo" data-sec="remover" aria-label="Remover seção">✕</button></span></div>
-    <textarea name="sec-texto" rows="5" placeholder="Texto. Separe os parágrafos com uma linha em branco. Para link: [texto](endereço)" aria-label="Texto da seção">${esc((s.paragrafos || []).join('\n\n'))}</textarea></fieldset>`;
-}
-function editarFesta(festa) {
-  const d = $('#dlg-festa'), f = $('#form-festa'), nova = !festa;
-  festa = festa || { id: '', nome: '', resumo: '', olho: '', lema: '', chita: 'vermelha', data_tipo: 'fixa', fixa_ini: '', fixa_fim: '', pascoa_ini: 0, pascoa_fim: 0, quando_texto: '', secoes: [{ titulo: 'Sobre a festa', paragrafos: [] }], veja: [], ordem: (festas.at(-1)?.ordem || 0) + 1, publicada: true };
-  f.reset(); f.querySelector('.erro').textContent = '';
-  $('#festa-titulo-dlg').textContent = nova ? 'Nova festa' : `Editar: ${festa.nome}`;
-  for (const k of ['nome', 'resumo', 'olho', 'lema', 'quando_texto', 'ordem', 'pascoa_ini', 'pascoa_fim']) f[k].value = festa[k] ?? '';
-  f.id_festa.value = festa.id; f.id_festa.readOnly = !nova;
-  f.chita.innerHTML = Object.entries(CHITAS).map(([v, t]) => `<option value="${v}"${festa.chita === v ? ' selected' : ''}>${t}</option>`).join('');
-  f.querySelectorAll('[name=data_tipo]').forEach(r => { r.checked = r.value === festa.data_tipo; });
-  const [mi, di] = (festa.fixa_ini || '-').split('-'), [mf, df] = (festa.fixa_fim || festa.fixa_ini || '-').split('-');
-  f.fixa_ini.value = di && mi ? `2000-${mi}-${di}` : ''; f.fixa_fim.value = df && mf ? `2000-${mf}-${df}` : '';
-  f.publicada.checked = festa.publicada;
-  $('#secoes-ed').innerHTML = (festa.secoes || []).map(secaoHTML).join('');
-  $('#veja-ed').innerHTML = festas.filter(x => x.id !== festa.id).map(x => `<label class="check"><input type="checkbox" name="veja" value="${esc(x.id)}"${(festa.veja || []).includes(x.id) ? ' checked' : ''}> ${esc(x.nome)}</label>`).join('') || '<small>Nenhuma outra festa.</small>';
-  mostrarCamposData();
-  f.nome.oninput = () => { if (nova && !f.id_festa.dataset.mexido) f.id_festa.value = slug(f.nome.value); };
-  f.id_festa.oninput = () => { f.id_festa.dataset.mexido = '1'; };
-  f.onsubmit = async e => {
-    e.preventDefault();
-    const tipo = f.querySelector('[name=data_tipo]:checked').value;
-    const md = v => (v ? v.slice(5) : null); // "2000-08-19" -> "08-19"
-    const dados = {
-      id: f.id_festa.value.trim(), nome: f.nome.value.trim(), resumo: f.resumo.value.trim(), olho: f.olho.value.trim(), lema: f.lema.value.trim(),
-      chita: f.chita.value, data_tipo: tipo, quando_texto: f.quando_texto.value.trim(), ordem: Number(f.ordem.value) || 0, publicada: f.publicada.checked,
-      pascoa_ini: tipo === 'pascoa' ? Number(f.pascoa_ini.value) : null, pascoa_fim: tipo === 'pascoa' ? Number(f.pascoa_fim.value || f.pascoa_ini.value) : null,
-      fixa_ini: tipo === 'fixa' ? md(f.fixa_ini.value) : null, fixa_fim: tipo === 'fixa' ? md(f.fixa_fim.value || f.fixa_ini.value) : null,
-      secoes: [...f.querySelectorAll('.secao-ed')].map(s => ({ titulo: s.querySelector('[name=sec-titulo]').value.trim(), paragrafos: s.querySelector('[name=sec-texto]').value.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean) })).filter(s => s.titulo),
-      veja: [...f.querySelectorAll('[name=veja]:checked')].map(c => c.value),
-    };
-    if (tipo === 'fixa' && !dados.fixa_ini) { f.querySelector('.erro').textContent = 'Escolha o dia da festa.'; return; }
-    if (tipo === 'livre' && !dados.quando_texto) { f.querySelector('.erro').textContent = 'Escreva quando a festa acontece.'; return; }
-    const q = nova ? sb.from('festas').insert(dados) : sb.from('festas').update(dados).eq('id', festa.id);
-    const { error } = await q;
-    if (error) { f.querySelector('.erro').textContent = traduzir(error); return; }
-    d.close(); toast('Festa salva. O site atualiza em até 1 hora.'); abaFestas();
-  };
-  d.showModal();
-}
-function mostrarCamposData() {
-  const tipo = $('#form-festa').querySelector('[name=data_tipo]:checked')?.value;
-  document.querySelectorAll('[data-campo-data]').forEach(el => { el.hidden = el.dataset.campoData !== tipo; });
-}
-$('#form-festa').addEventListener('change', e => { if (e.target.name === 'data_tipo') mostrarCamposData(); });
-$('#add-secao').addEventListener('click', () => { $('#secoes-ed').insertAdjacentHTML('beforeend', secaoHTML()); $('#secoes-ed').lastElementChild.querySelector('input').focus(); });
-$('#secoes-ed').addEventListener('click', e => {
-  const b = e.target.closest('[data-sec]'); if (!b) return;
-  const s = b.closest('.secao-ed');
-  if (b.dataset.sec === 'remover') s.remove();
-  if (b.dataset.sec === 'subir' && s.previousElementSibling) s.previousElementSibling.before(s);
-  if (b.dataset.sec === 'descer' && s.nextElementSibling) s.nextElementSibling.after(s);
-});
+// ================= FESTAS (tela de edição em admin-festas.js) =================
 
 // ================= USUÁRIOS (só admin) =================
 let usuarios = [], buscaUs = '';

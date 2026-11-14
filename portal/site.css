@@ -319,3 +319,23 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .cartao-festa .cartao-ev-corpo .selo { color: var(--telha); }
 .festa-contagem { position: absolute; left: 10px; right: 10px; bottom: 10px; width: fit-content; max-width: calc(100% - 20px); padding: 4px 11px; border-radius: 999px; background: #fff; color: var(--tinta) !important; font-size: .78rem !important; font-weight: 800; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
 .festa-contagem:empty { display: none; }
+
+/* festas: imagem de destaque, campos personalizados e texto do editor */
+.festa-topo.com-imagem { height: 210px; position: relative; }
+.festa-topo.com-imagem img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.cartao-festa .cartao-ev-capa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.festa-destaque { margin: 0 0 18px; }
+.festa-destaque img { display: block; width: 100%; max-width: 440px; margin-inline: auto; border-radius: 16px; box-shadow: var(--sombra); }
+.festa-info { margin: 0 0 8px; padding: 14px 18px; background: var(--cartao); border-radius: 16px; box-shadow: var(--sombra); display: grid; gap: 8px; }
+.festa-info > div { display: grid; grid-template-columns: minmax(110px, 30%) 1fr; gap: 4px 14px; }
+.festa-info dt { font-size: .76rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); padding-top: 2px; }
+.festa-info dd { margin: 0; overflow-wrap: anywhere; }
+.festa-texto h2 { margin: 28px 0 8px; font-size: 1.35rem; }
+.festa-texto h3 { margin: 22px 0 6px; font-size: 1.12rem; }
+.festa-texto h4 { margin: 18px 0 4px; font-size: 1rem; }
+.festa-texto p, .festa-texto li { line-height: 1.65; }
+.festa-texto ul, .festa-texto ol { padding-left: 1.3em; }
+.festa-texto blockquote { margin: 16px 0; padding: 4px 0 4px 16px; border-left: 4px solid var(--ouro); color: var(--suave); font-style: italic; }
+.festa-texto a { color: var(--telha); }
+.festa-texto hr { border: 0; border-top: 1px solid var(--linha); margin: 24px 0; }
+@media (max-width: 560px) { .festa-info > div { grid-template-columns: 1fr; } }
