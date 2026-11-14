@@ -62,6 +62,8 @@
   <div class="linha"><label>Começa<input name="inicio" type="datetime-local" required></label><label>Termina<input name="fim" type="datetime-local" required></label></div>
   <label class="check"><input type="checkbox" id="ev-dia-todo"> Dia todo (00:00 a 23:59)</label>
   <label>Detalhes<textarea name="descricao" rows="4" maxlength="2000"></textarea></label>
+  <label class="seletor-foto seletor-capa">Imagem do evento<input name="imagem" type="file" accept="image/*"><img id="ev-previa" alt="" hidden><span id="ev-sem-capa">Escolher imagem (cartaz, foto do local…)</span></label>
+  <label class="check" id="ev-remover-wrap" hidden><input type="checkbox" name="remover_imagem"> Remover a imagem atual</label>
   <p class="erro" role="alert"></p>
   <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar</button></div>
 </form></dialog>

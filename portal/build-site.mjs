@@ -168,18 +168,16 @@ paginas.push({
   </div>
 </section>
 
-<div class="larg home-colunas">
-  <section class="secao" aria-labelledby="t-prox">
-    <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2><a class="link-seta" href="agenda.html">Ver calendário</a></div>
-    <ul id="proximos" class="cartoes-evento"><li class="carregando">Carregando…</li></ul>
-  </section>
-  <div class="coluna-lateral">
-    <section class="secao" aria-labelledby="t-festa">
-      <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
-      <a class="explore-card destaque" href="${proximaFesta.pagina || 'festas.html'}" style="--chita:url(img/chita-${proximaFesta.chita}.svg)"><strong>${esc(proximaFesta.nome)}</strong><span>${esc(proximaFesta.quando)}</span><span class="contagem" data-contagem="${proximaFesta.ini}" data-fim="${proximaFesta.fim}"></span></a>
-    </section>
-  </div>
-</div>
+<section class="secao larg" aria-labelledby="t-prox">
+  <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2>
+    <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Eventos anteriores" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximos eventos" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><a class="link-seta" href="agenda.html">Ver calendário</a></div></div>
+  <ul id="proximos" class="carrossel" tabindex="0" aria-label="Próximos eventos (role para o lado)"><li class="carregando">Carregando…</li></ul>
+</section>
+
+<section class="secao larg" aria-labelledby="t-festa">
+  <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
+  <a class="explore-card destaque festa-faixa" href="${proximaFesta.pagina || 'festas.html'}" style="--chita:url(img/chita-${proximaFesta.chita}.svg)"><strong>${esc(proximaFesta.nome)}</strong><span>${esc(proximaFesta.quando)}</span><span class="contagem" data-contagem="${proximaFesta.ini}" data-fim="${proximaFesta.fim}"></span></a>
+</section>
 
 <section class="secao larg" aria-labelledby="t-explore">
   <div class="secao-topo"><h2 id="t-explore">Conheça a cidade</h2></div>
@@ -257,6 +255,7 @@ paginas.push({
   <div class="linha"><label>Dia<input name="dia" type="date" required></label><label>Começa<input name="hora_ini" type="time" required></label><label>Termina<input name="hora_fim" type="time" required></label></div>
   <label>Tipo<select name="categoria" id="sel-categoria"></select></label>
   <label>Detalhes (opcional)<textarea name="descricao" rows="3" maxlength="2000" placeholder="Quem organiza, se é gratuito, o que levar…"></textarea></label>
+  <label class="seletor-foto seletor-capa">Imagem do evento (opcional)<input name="imagem" type="file" accept="image/*"><img id="previa-capa" alt="" hidden><span id="sem-capa">Escolher uma imagem: cartaz, foto do local…</span></label>
   <p class="erro" role="alert"></p>
   <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Publicar</button></div>
 </form></dialog>
@@ -371,6 +370,8 @@ paginas.push({
   <div class="linha"><label>Começa<input name="inicio" type="datetime-local" required></label><label>Termina<input name="fim" type="datetime-local" required></label></div>
   <label class="check"><input type="checkbox" id="ev-dia-todo"> Dia todo (00:00 a 23:59)</label>
   <label>Detalhes<textarea name="descricao" rows="4" maxlength="2000"></textarea></label>
+  <label class="seletor-foto seletor-capa">Imagem do evento<input name="imagem" type="file" accept="image/*"><img id="ev-previa" alt="" hidden><span id="ev-sem-capa">Escolher imagem (cartaz, foto do local…)</span></label>
+  <label class="check" id="ev-remover-wrap" hidden><input type="checkbox" name="remover_imagem"> Remover a imagem atual</label>
   <p class="erro" role="alert"></p>
   <div class="acoes"><button type="button" class="botao-sec" data-fechar>Cancelar</button><button class="botao-primario">Salvar</button></div>
 </form></dialog>

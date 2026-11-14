@@ -93,14 +93,37 @@ function quando(iso) {
   return `${n === 0 ? 'hoje' : n === 1 ? 'amanhã' : d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}${hora(d) === '00:00' ? '' : ` às ${hora(d)}`}`;
 }
 const FERIADO_NACIONAL = /^(dia da consci[eê]ncia negra|dia do trabalho(?:ador)?|tiradentes|independ[eê]ncia do brasil|(?:dia da )?proclama[cç][aã]o da rep[uú]blica|finados|dia de finados|nossa senhora aparecida|confraterniza[cç][aã]o universal|ano novo|natal|sexta-feira santa)$/i;
+// Cor de cada tipo de evento (a mesma da agenda): pinta a capa dos eventos que não têm imagem.
+const COR_CAT = { 'Festa e tradição': '#e0263d', 'Música': '#d6338a', 'Religioso': '#2c5f7c', 'Esporte': '#2f6b4f', 'Cultura': '#d99a00', 'Feira e comércio': '#c8452c', 'Comunidade': '#6b5ca5', 'Outros': '#6a655d' };
 function renderProximos() {
-  // Feriados nacionais ficam só na agenda: na home entram os eventos da cidade.
-  const prox = eventos.filter(e => new Date(e.inicio) > Date.now() && !FERIADO_NACIONAL.test(e.titulo)).slice(0, 5);
+  // Carrossel: até 10 eventos da cidade (feriados nacionais ficam só na agenda), com a imagem do evento quando houver.
+  const prox = eventos.filter(e => new Date(e.inicio) > Date.now() && !FERIADO_NACIONAL.test(e.titulo)).slice(0, 10);
   $('#proximos').innerHTML = prox.length ? prox.map(e => {
     const d = new Date(e.inicio);
-    return `<li><a href="agenda.html"><div class="dia-bloco"><b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></div><div><strong>${esc(e.titulo)}</strong><span>${diaTodo(e) ? 'Dia todo' : hora(d)} · ${esc(e.local)}</span></div></a></li>`;
-  }).join('') : '<li class="carregando">Nenhum evento adicionado para os próximos dias. <a href="agenda.html#novo">Adicione o primeiro</a>.</li>';
+    return `<li><a class="cartao-ev" href="agenda.html" style="--c:${COR_CAT[e.categoria] || COR_CAT.Outros}">
+      ${e.descricao ? `<p class="cartao-ev-desc"><span>${esc(e.descricao)}</span></p>` : ''}
+      <div class="cartao-ev-capa">${e.imagem_url ? `<img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async">` : '<span class="sem-imagem" aria-hidden="true"></span>'}
+        <span class="cartao-ev-data"><b>${d.getDate()}</b>${MESES[d.getMonth()]}</span></div>
+      <div class="cartao-ev-corpo"><span class="selo">${esc(e.categoria)}</span><strong>${esc(e.titulo)}</strong>
+        <span>${esc(maiuscula(quando(e.inicio)))}</span><span>📍 ${esc(e.local)}</span></div></a></li>`;
+  }).join('') : '<li class="carrossel-vazio">Nenhum evento adicionado para os próximos dias. <a href="agenda.html#novo">Adicione o primeiro</a>.</li>';
+  atualizarSetas();
 }
+// Setas do carrossel (no celular basta arrastar para o lado; as setas aparecem só quando há mais para ver).
+const trilho = $('#proximos');
+function atualizarSetas() {
+  const sobra = trilho.scrollWidth - trilho.clientWidth > 4;
+  document.querySelectorAll('[data-carrossel]').forEach(b => {
+    b.hidden = !sobra;
+    b.disabled = b.dataset.carrossel === '-1' ? trilho.scrollLeft < 4 : trilho.scrollLeft > trilho.scrollWidth - trilho.clientWidth - 4;
+  });
+}
+document.querySelectorAll('[data-carrossel]').forEach(b => b.addEventListener('click', () => {
+  const card = trilho.querySelector('li'); const passo = card ? card.getBoundingClientRect().width + 14 : 300;
+  trilho.scrollBy({ left: Number(b.dataset.carrossel) * passo * Math.max(1, Math.floor(trilho.clientWidth / passo)), behavior: semMovimento ? 'auto' : 'smooth' });
+}));
+trilho.addEventListener('scroll', () => requestAnimationFrame(atualizarSetas), { passive: true });
+new ResizeObserver(atualizarSetas).observe(trilho);
 
 // ---------------- mapa ----------------
 function montarMapa() {

@@ -18,6 +18,11 @@ export function acontecendo(ev, agora = Date.now()) {
   return !encerrado(ev) && agora >=new Date(ev.inicio) - 15 * MIN && agora <= +new Date(ev.fim);
 }
 
+// Endereço público da imagem de capa (bucket "eventos").
+export const urlImagemEvento = (caminho, cfg = window.AGENDA_CONFIG || {}) =>
+  caminho && cfg.supabaseUrl ? `${cfg.supabaseUrl}/storage/v1/object/public/eventos/${caminho.split('/').map(encodeURIComponent).join('/')}` : null;
+const comImagem = (e, cfg) => ({ ...e, imagem_url: e.imagem_url || urlImagemEvento(e.imagem, cfg) });
+
 export async function criarBackend() {
   const cfg = window.AGENDA_CONFIG || {};
   if (cfg.supabaseUrl && cfg.supabaseKey) {
@@ -63,7 +68,7 @@ async function supabaseBackend(cfg) {
     enviarRecado: delegar('enviarRecado'),
     apagarRecado: delegar('apagarRecado'),
     listarRecados: ids => (ids.length ? rest(`recados_resumo?select=*&evento_id=in.(${ids.map(Number).join(',')})&order=criado_em&limit=500`) : Promise.resolve([])),
-    listarEventos: (de, ate) => rest(`eventos_resumo?select=*&fim=gte.${encodeURIComponent(de.toISOString())}&inicio=lte.${encodeURIComponent(ate.toISOString())}&order=inicio&limit=300`),
+    listarEventos: async (de, ate) => (await rest(`eventos_resumo?select=*&fim=gte.${encodeURIComponent(de.toISOString())}&inicio=lte.${encodeURIComponent(ate.toISOString())}&order=inicio&limit=300`)).map(e => comImagem(e, cfg)),
     async listarRegistros(ids) {
       if (!ids.length) return [];
       const lista = await rest(`registros_resumo?select=*&evento_id=in.(${ids.map(Number).join(',')})&order=criado_em.desc&limit=200`);
@@ -113,10 +118,17 @@ async function supabaseCompleto(cfg) {
         return new Set((r.data || []).map(x => x.evento_id));
       };
       const [minhas, meusFim] = await Promise.all([meus('confirmacoes'), meus('encerramentos')]);
-      return data.map(e => ({ ...e, eu_confirmei: minhas.has(e.id), eu_encerrei: meusFim.has(e.id) }));
+      return data.map(e => comImagem({ ...e, eu_confirmei: minhas.has(e.id), eu_encerrei: meusFim.has(e.id) }, cfg));
     },
-    async criarEvento(ev) {
-      const { error } = await sb.from('eventos').insert(ev);
+    async criarEvento(ev, imagem) { // imagem: Blob já reduzido (opcional), vai para o bucket "eventos"
+      let caminho = null;
+      if (imagem) {
+        caminho = `${perfil.id}/${Date.now()}.jpg`;
+        const up = await sb.storage.from('eventos').upload(caminho, imagem, { contentType: 'image/jpeg' });
+        falhou(up.error, 'Não foi possível enviar a imagem.');
+      }
+      const { error } = await sb.from('eventos').insert({ ...ev, imagem: caminho });
+      if (error && caminho) await sb.storage.from('eventos').remove([caminho]);
       falhou(error, 'Não foi possível salvar o evento.');
     },
     async confirmar(id) {
@@ -204,14 +216,15 @@ function demoBackend() {
         .sort((a, b) => a.inicio.localeCompare(b.inicio))
         .map(e => {
           const c = db.confirmacoes.filter(x => x.evento_id === e.id);
-          return { ...e, confirmacoes: c.length, ultima_confirmacao: c.map(x => x.criado_em).sort().pop() || null,
+          return { ...e, imagem_url: fotosMem.get(`ev-${e.id}`) || e.imagem_demo || null, confirmacoes: c.length, ultima_confirmacao: c.map(x => x.criado_em).sort().pop() || null,
             registros: db.registros.filter(r => r.evento_id === e.id).length, eu_confirmei: !!eu() && c.some(x => x.usuario_id === eu().id),
             encerramentos: (db.encerramentos || []).filter(x => x.evento_id === e.id).length, eu_encerrei: !!eu() && (db.encerramentos || []).some(x => x.evento_id === e.id && x.usuario_id === eu().id) };
         });
     },
-    async criarEvento(ev) {
+    async criarEvento(ev, imagem) {
       if (!eu()) throw new Error('Entre para adicionar eventos.');
-      db.eventos.push({ ...ev, id: Date.now(), criado_por: eu().id, autor: eu().nome, criado_em: new Date().toISOString() }); gravar(db);
+      const id = Date.now(); if (imagem) fotosMem.set(`ev-${id}`, URL.createObjectURL(imagem));
+      db.eventos.push({ ...ev, id, criado_por: eu().id, autor: eu().nome, criado_em: new Date().toISOString() }); gravar(db);
     },
     async confirmar(id) {
       const ev = db.eventos.find(e => e.id === id);
@@ -267,6 +280,8 @@ function semear() {
     ev(5, 'b', { titulo: 'Roda de viola caipira', local: 'Casa de Oswaldo Cruz', categoria: 'Cultura', inicio: dia(2, 19), fim: dia(2, 22) }),
     ev(6, 'a', { titulo: 'Mutirão de limpeza do rio', local: 'Parque Linear Urbano', categoria: 'Comunidade', inicio: dia(5, 8), fim: dia(5, 12) }),
   ];
+  // capas de exemplo (na demonstração, para ver o carrossel e os cartões com imagem)
+  eventos[0].imagem_demo = fotoDemo('#b5552f', '#f2c14e', '#2f6f8a'); eventos[3].imagem_demo = fotoDemo('#2f6b4f', '#f5b700', '#c8452c'); eventos[4].imagem_demo = fotoDemo('#6b5ca5', '#e0263d', '#2c5f7c');
   const confirmacoes = ['u-ze', 'u-par', 'u-x1', 'u-x2', 'u-x3'].map((u, i) => ({ evento_id: 1, usuario_id: u, criado_em: rel(-30 + i * 5) }))
     .concat([{ evento_id: 2, usuario_id: 'u-ana', criado_em: rel(-4) }]);
   const registros = [

@@ -64,18 +64,16 @@
   </div>
 </section>
 
-<div class="larg home-colunas">
-  <section class="secao" aria-labelledby="t-prox">
-    <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2><a class="link-seta" href="agenda.html">Ver calendário</a></div>
-    <ul id="proximos" class="cartoes-evento"><li class="carregando">Carregando…</li></ul>
-  </section>
-  <div class="coluna-lateral">
-    <section class="secao" aria-labelledby="t-festa">
-      <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
-      <a class="explore-card destaque" href="festas/carnaval-de-marchinhas.html" style="--chita:url(img/chita-vermelha.svg)"><strong>Carnaval de Marchinhas</strong><span>5 de fevereiro a 9 de fevereiro de 2027</span><span class="contagem" data-contagem="2027-02-05" data-fim="2027-02-09"></span></a>
-    </section>
-  </div>
-</div>
+<section class="secao larg" aria-labelledby="t-prox">
+  <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2>
+    <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Eventos anteriores" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximos eventos" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><a class="link-seta" href="agenda.html">Ver calendário</a></div></div>
+  <ul id="proximos" class="carrossel" tabindex="0" aria-label="Próximos eventos (role para o lado)"><li class="carregando">Carregando…</li></ul>
+</section>
+
+<section class="secao larg" aria-labelledby="t-festa">
+  <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
+  <a class="explore-card destaque festa-faixa" href="festas/carnaval-de-marchinhas.html" style="--chita:url(img/chita-vermelha.svg)"><strong>Carnaval de Marchinhas</strong><span>5 de fevereiro a 9 de fevereiro de 2027</span><span class="contagem" data-contagem="2027-02-05" data-fim="2027-02-09"></span></a>
+</section>
 
 <section class="secao larg" aria-labelledby="t-explore">
   <div class="secao-topo"><h2 id="t-explore">Conheça a cidade</h2></div>

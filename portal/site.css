@@ -285,3 +285,32 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .proximo-marca .b-agora { fill: #ffd66b; }
 .mapa-info .ao-vivo.proximo { background: #fff8e1; border-color: #f3dc9a; }
 .mapa-info .ao-vivo.proximo .vivo-titulo { color: #8a6400; }
+
+/* carrossel de próximos eventos (home) */
+.carrossel-ctrl { display: flex; align-items: center; gap: 8px; }
+.carrossel-ctrl .icone-btn { width: 36px; height: 36px; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid var(--linha); background: var(--cartao); color: var(--tinta); cursor: pointer; padding: 0; }
+.carrossel-ctrl .icone-btn[hidden] { display: none; }
+.carrossel-ctrl .icone-btn:disabled { opacity: .35; cursor: default; }
+.carrossel-ctrl .link-seta { margin-left: 6px; }
+.carrossel { list-style: none; margin: 0; padding: 4px 2px 14px; display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; overscroll-behavior-x: contain; scrollbar-width: none; }
+.carrossel::-webkit-scrollbar { display: none; }
+.carrossel:focus-visible { outline: 3px solid var(--telha); outline-offset: 2px; border-radius: 12px; }
+.carrossel > li { flex: 0 0 min(300px, 78vw); scroll-snap-align: start; }
+.carrossel-vazio { flex: 1 1 auto !important; color: var(--suave); }
+.cartao-ev { display: flex; flex-direction: column; height: 100%; background: var(--cartao); border-radius: var(--raio); overflow: hidden; box-shadow: var(--sombra); text-decoration: none; transition: transform .15s; }
+.cartao-ev:hover { transform: translateY(-3px); }
+.cartao-ev:focus-visible { outline: 3px solid var(--telha); outline-offset: 2px; }
+.cartao-ev-capa { position: relative; aspect-ratio: 16 / 9; background: var(--linha); }
+.cartao-ev-capa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cartao-ev-capa .sem-imagem { position: absolute; inset: 0; background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 55%, #1d1b18)); }
+.cartao-ev-capa .sem-imagem::after { content: ""; position: absolute; inset: 0; background: url(img/faixa-flores.svg) 0 100% / auto 14px repeat-x; opacity: .9; }
+.cartao-ev-data { position: absolute; left: 10px; top: 10px; display: flex; flex-direction: column; align-items: center; min-width: 46px; padding: 5px 8px; border-radius: 10px; background: #fff; color: var(--tinta); font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; line-height: 1.1; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
+.cartao-ev-data b { font-size: 1.25rem; letter-spacing: 0; }
+.cartao-ev-corpo { padding: 12px 14px 14px; display: grid; gap: 3px; }
+.cartao-ev-corpo .selo { color: var(--c); }
+.cartao-ev-corpo strong { font-size: 1.05rem; line-height: 1.25; }
+.cartao-ev-corpo span:not(.selo) { font-size: .85rem; color: var(--suave); }
+.festa-faixa { min-height: 150px; max-width: none; }
+@media (min-width: 720px) { .festa-faixa { min-height: 170px; } }
+.cartao-ev-desc { margin: 0; padding: 12px 14px; min-height: calc(3 * 1.4em + 24px); }
+.cartao-ev-desc span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: .88rem; line-height: 1.4; color: var(--tinta); }

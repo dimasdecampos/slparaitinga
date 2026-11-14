@@ -1,6 +1,7 @@
 // Painel /admin: agenda, festas e usuários.
 // Quem pode o quê é decidido no banco (RLS e funções em supabase/admin.sql); aqui só escondemos o que a pessoa não pode usar.
-import { CATEGORIAS } from './backend.js';
+import { CATEGORIAS, urlImagemEvento } from './backend.js';
+import { comprimir } from './imagem.js';
 import { ligarSugestoes } from './sugestoes.js';
 
 const cfg = window.AGENDA_CONFIG || {};
@@ -93,7 +94,9 @@ async function abaAgenda() {
   app.querySelectorAll('[data-visao]').forEach(b => b.onclick = () => { filtroEv.visao = b.dataset.visao; app.querySelectorAll('[data-visao]').forEach(x => x.setAttribute('aria-pressed', x === b)); listarEventos(); });
   const { data, error } = await sb.rpc('equipe_eventos');
   if (error) return falha(error);
-  eventos = data; listarEventos();
+  const { data: imgs } = await sb.from('eventos').select('id, imagem').not('imagem', 'is', null);
+  const porId = new Map((imgs || []).map(x => [x.id, x.imagem]));
+  eventos = data.map(e => ({ ...e, imagem: porId.get(e.id) || null })); listarEventos();
 }
 function listarEventos() {
   const agora = Date.now(), q = filtroEv.busca.trim().toLowerCase();
@@ -104,7 +107,7 @@ function listarEventos() {
   $('#lista-ev').innerHTML = lista.length ? `<table class="tabela"><thead><tr><th>Quando</th><th>Evento</th><th>Tipo</th><th>Adicionado por</th><th><span class="sr">Ações</span></th></tr></thead><tbody>
     ${lista.map(e => `<tr data-id="${e.id}"${e.oculto ? ' class="apagado"' : ''}>
       <td data-rotulo="Quando">${esc(dataHora(e.inicio))}</td>
-      <td data-rotulo="Evento"><b>${esc(e.titulo)}</b><small>${esc(e.local)}</small>${e.oculto ? '<span class="tag tag-cinza">Oculto</span>' : ''}${e.denuncias ? `<span class="tag tag-vermelha">${e.denuncias} ${e.denuncias === 1 ? 'denúncia' : 'denúncias'}</span>` : ''}</td>
+      <td data-rotulo="Evento">${e.imagem ? `<img class="mini-capa" src="${esc(urlImagemEvento(e.imagem))}" alt="" loading="lazy">` : ''}<b>${esc(e.titulo)}</b><small>${esc(e.local)}</small>${e.oculto ? '<span class="tag tag-cinza">Oculto</span>' : ''}${e.denuncias ? `<span class="tag tag-vermelha">${e.denuncias} ${e.denuncias === 1 ? 'denúncia' : 'denúncias'}</span>` : ''}</td>
       <td data-rotulo="Tipo">${esc(e.categoria)}</td>
       <td data-rotulo="Por">${esc(e.autor || '—')}</td>
       <td class="acoes-linha"><button type="button" class="botao-sec" data-ev-editar>Editar</button><button type="button" class="botao-sec" data-ev-ocultar>${e.oculto ? 'Mostrar' : 'Ocultar'}</button><button type="button" class="botao-sec perigo" data-ev-excluir>Excluir</button></td>
@@ -123,6 +126,7 @@ app.addEventListener('click', async e => {
   if (await confirmar(`Excluir "${ev.titulo}"? Isso apaga também as fotos, recados e confirmações do evento. Não dá para desfazer.`)) {
     const { error } = await sb.from('eventos').delete().eq('id', ev.id);
     if (error) return falha(error);
+    if (ev.imagem) await sb.storage.from('eventos').remove([ev.imagem]);
     eventos = eventos.filter(x => x.id !== ev.id); listarEventos(); toast('Evento excluído.');
   }
 });
@@ -135,18 +139,35 @@ function editarEvento(ev) {
     f.titulo.value = ev.titulo; f.local.value = ev.local; f.categoria.value = ev.categoria; f.descricao.value = ev.descricao || '';
     f.inicio.value = paraInput(ev.inicio); f.fim.value = paraInput(ev.fim);
   }
+  const previa = $('#ev-previa'), atual = ev?.imagem ? urlImagemEvento(ev.imagem) : null;
+  previa.hidden = !atual; if (atual) previa.src = atual; else previa.removeAttribute('src');
+  $('#ev-sem-capa').hidden = !!atual; $('#ev-remover-wrap').hidden = !atual;
   f.onsubmit = async e => {
     e.preventDefault();
     const ini = new Date(f.inicio.value), fim = new Date(f.fim.value);
     if (!(fim > ini)) { f.querySelector('.erro').textContent = 'O fim precisa ser depois do início.'; return; }
     const dados = { titulo: f.titulo.value.trim(), local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: ini.toISOString(), fim: fim.toISOString() };
+    // imagem: nova (envia reduzida), remover, ou manter a atual
+    const arq = f.imagem.files[0];
+    let nova = null;
+    if (arq) {
+      nova = `${eu.id}/${Date.now()}.jpg`;
+      const up = await sb.storage.from('eventos').upload(nova, await comprimir(arq, 1280), { contentType: 'image/jpeg' });
+      if (up.error) { f.querySelector('.erro').textContent = traduzir(up.error); return; }
+      dados.imagem = nova;
+    } else if (f.remover_imagem.checked) dados.imagem = null;
     const q = ev ? sb.from('eventos').update(dados).eq('id', ev.id) : sb.from('eventos').insert(dados);
     const { error } = await q;
-    if (error) { f.querySelector('.erro').textContent = traduzir(error); return; }
+    if (error) { if (nova) await sb.storage.from('eventos').remove([nova]); f.querySelector('.erro').textContent = traduzir(error); return; }
+    if (ev?.imagem && 'imagem' in dados) await sb.storage.from('eventos').remove([ev.imagem]); // a antiga não fica sobrando
     d.close(); toast(ev ? 'Evento atualizado.' : 'Evento criado.'); abaAgenda();
   };
   d.showModal();
 }
+$('#form-ev').imagem.addEventListener('change', e => {
+  const arq = e.target.files[0]; if (!arq) return;
+  $('#ev-previa').src = URL.createObjectURL(arq); $('#ev-previa').hidden = false; $('#ev-sem-capa').hidden = true;
+});
 $('#ev-dia-todo').addEventListener('change', e => {
   const f = $('#form-ev'); if (!e.target.checked) return;
   const dia = (f.inicio.value || paraInput(new Date().toISOString())).slice(0, 10);

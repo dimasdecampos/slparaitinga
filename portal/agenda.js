@@ -1,5 +1,6 @@
 import { criarBackend, CATEGORIAS, janelaAberta, acontecendo, encerrado } from './backend.js';
 import { ligarSugestoes } from './sugestoes.js';
+import { comprimir } from './imagem.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -44,19 +45,6 @@ function rotuloDia(d) {
 }
 // Reduz a foto antes de enviar (economiza dados no celular). O <img> já aplica a rotação da câmera (EXIF).
 // Se algo falhar, envia o arquivo original.
-async function comprimir(file, max = 1600) {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image(); img.src = url;
-    await Promise.race([img.decode(), new Promise((_, n) => setTimeout(() => n(new Error('tempo esgotado')), 8000))]);
-    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82));
-    return blob || file;
-  } catch (e) { console.warn('[agenda] não foi possível reduzir a foto', e); return file; }
-  finally { URL.revokeObjectURL(url); }
-}
 function exigirLogin(depois) {
   if (api.usuario()) return true;
   abrirEntrar(depois); return false;
@@ -163,7 +151,7 @@ function render() {
       nFotos ? `${nFotos} ${nFotos === 1 ? 'foto' : 'fotos'}` : '',
       msgs.length ? `${msgs.length} ${msgs.length === 1 ? 'recado' : 'recados'}` : '',
     ].filter(Boolean).join(' · ');
-    return `<article class="vivo" data-id="${e.id}" aria-labelledby="vivo-t-${e.id}">
+    return `<article class="vivo" data-id="${e.id}" aria-labelledby="vivo-t-${e.id}">${e.imagem_url ? `<img class="vivo-capa" src="${esc(e.imagem_url)}" alt="" decoding="async">` : ''}
       <div class="vivo-cab">
         <div class="vivo-info">
           <div class="vivo-selos">${terminou ? '<span class="pill-fim">Terminou há pouco</span>' : '<span class="pill-vivo"><span class="ponto"></span>Ao vivo</span>'}<span class="selo">${esc(e.categoria)}</span></div>
@@ -240,7 +228,7 @@ function renderDia() {
   const agora = Date.now();
   $('#cal-dia').innerHTML = `<div class="dia-cab"><span class="dia-num${diaSel === hojeK ? ' hoje' : ''}">${d.getDate()}</span>
       <div><strong>${maiuscula(d.toLocaleDateString('pt-BR', { weekday: 'long' }))}</strong><small>${rel ? `${rel} · ` : ''}${d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</small></div></div>`
-    + (evs.length ? evs.map(e => `<article class="ev-card" style="--c:${corDe(e.categoria)}">
+    + (evs.length ? evs.map(e => `<article class="ev-card" style="--c:${corDe(e.categoria)}">${e.imagem_url ? `<img class="ev-capa" src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}
         <div class="ev-hora${diaTodo(e) ? ' todo' : ''}">${faixa(e)[0]}<small>${faixa(e)[1]}</small></div>
         <div class="ev-corpo"><div class="selos"><span class="selo">${esc(e.categoria)}</span>${acontecendo(e, agora) ? '<span class="selo ao-vivo">acontecendo agora</span>' : ''}</div>
           <strong>${esc(e.titulo)}</strong><span class="onde">📍 ${esc(e.local)}</span>
@@ -255,7 +243,7 @@ function renderLista(vivosIds) {
   const grupos = new Map();
   for (const e of vis) { const k = rotuloDia(e.inicio); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(e); }
   $('#proximos').innerHTML = vis.length ? [...grupos].map(([dia, evs]) => `<div class="dia-grupo"><h3>${esc(dia)}</h3>${evs.map(e => `
-      <article class="evento-linha" style="--c:${corDe(e.categoria)}">
+      <article class="evento-linha" style="--c:${corDe(e.categoria)}">${e.imagem_url ? `<img class="ev-capa" src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}
         <div class="hora${diaTodo(e) ? ' todo' : ''}">${faixa(e)[0]}<small>${faixa(e)[1]}</small></div>
         <div><span class="selo">${esc(e.categoria)}</span><strong>${esc(e.titulo)}</strong><span class="onde">📍 ${esc(e.local)}</span>
           ${e.descricao ? `<p>${esc(e.descricao)}</p>` : ''}<span class="por">Adicionado por ${esc(e.autor)}</span></div>
@@ -427,10 +415,15 @@ $('#novo-evento').addEventListener('click', () => abrirNovoEvento());
 function abrirNovoEvento(dia) { // dia: AAAA-MM-DD opcional (vem do calendário)
   if (!exigirLogin(() => abrirNovoEvento(dia))) return;
   const f = $('#form-evento'); f.reset(); f.querySelector('.erro').textContent = '';
+  $('#previa-capa').hidden = true; $('#previa-capa').removeAttribute('src'); $('#sem-capa').hidden = false;
   const hoje = chave(new Date());
   f.dia.min = hoje; f.dia.value = dia && dia >= hoje ? dia : hoje;
   $('#dlg-evento').showModal();
 }
+$('#form-evento').imagem.addEventListener('change', e => { // prévia da imagem do evento
+  const arq = e.target.files[0]; if (!arq) return;
+  $('#previa-capa').src = URL.createObjectURL(arq); $('#previa-capa').hidden = false; $('#sem-capa').hidden = true;
+});
 $('#form-evento').addEventListener('submit', async e => {
   e.preventDefault(); const f = e.target, btn = f.querySelector('.botao-primario'), erro = f.querySelector('.erro');
   const inicio = new Date(`${f.dia.value}T${f.hora_ini.value}`); let fim = new Date(`${f.dia.value}T${f.hora_fim.value}`);
@@ -438,7 +431,8 @@ $('#form-evento').addEventListener('submit', async e => {
   if (fim < Date.now()) { erro.textContent = 'Esse horário já passou.'; return; }
   btn.disabled = true;
   try {
-    await api.criarEvento({ titulo: f.titulo.value.trim(), local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: inicio.toISOString(), fim: fim.toISOString() });
+    const arq = f.imagem.files[0], capa = arq ? await comprimir(arq, 1280) : null;
+    await api.criarEvento({ titulo: f.titulo.value.trim(), local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: inicio.toISOString(), fim: fim.toISOString() }, capa);
     $('#dlg-evento').close(); toast('Evento publicado na agenda!');
     if (visao === 'mes') { diaSel = chave(inicio); mes = primeiroDia(inicio); } // mostra o evento recém-criado no calendário
     await carregar();
