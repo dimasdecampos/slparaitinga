@@ -28,7 +28,7 @@ const SUPABASE_KEY = (CONFIG_JS.match(/supabaseKey:\s*'([^']+)'/) || [])[1];
 
 // As festas vêm do banco (painel /admin). A regra da data vira uma função: dias em relação à Páscoa ou dia fixo no ano.
 const { carregarFestas, gerar: gerarFestas } = await import('./festas-conteudo.mjs');
-const { limparHtml, secoesParaHtml } = await import('./html-seguro.mjs');
+const { limparHtml, secoesParaHtml } = await import('./html-seguro.js');
 const urlImagemFesta = caminho => (caminho && SUPABASE ? `${SUPABASE}/storage/v1/object/public/festas/${caminho.split('/').map(encodeURIComponent).join('/')}` : null);
 const regraDatas = f => {
   if (f.data_tipo === 'pascoa' && Number.isInteger(f.pascoa_ini)) return y => [mais(pascoa(y), f.pascoa_ini), mais(pascoa(y), f.pascoa_fim ?? f.pascoa_ini)];

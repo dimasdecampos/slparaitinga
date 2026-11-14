@@ -1,7 +1,7 @@
 // Festas: o conteúdo vem da tabela public.festas (editada no painel /admin).
 // Na publicação, busca no Supabase e guarda uma cópia em data/festas.json; se o banco não responder, usa essa cópia.
 import fs from 'fs';
-import { enderecoSeguro } from './html-seguro.mjs';
+import { enderecoSeguro } from './html-seguro.js';
 
 const COPIA = new URL('./data/festas.json', import.meta.url);
 

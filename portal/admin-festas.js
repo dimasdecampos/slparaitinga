@@ -1,6 +1,6 @@
 // Painel /admin › Festas: a lista e UMA tela de edição, reaproveitada por todas as festas (no estilo do editor do WordPress).
-// Conteúdo rico (HTML limpo por html-seguro.mjs), imagem de destaque que vai para os cartões e campos personalizados.
-import { limparHtml, secoesParaHtml, htmlParaTexto } from './html-seguro.mjs';
+// Conteúdo rico (HTML limpo por html-seguro.js), imagem de destaque que vai para os cartões e campos personalizados.
+import { limparHtml, secoesParaHtml, htmlParaTexto } from './html-seguro.js';
 import { comprimir } from './imagem.js';
 
 const CHITAS = { vermelha: 'Vermelha', azul: 'Azul', amarela: 'Amarela' };
