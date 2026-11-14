@@ -1,6 +1,6 @@
 // Painel /admin: agenda, festas e usuários.
 // Quem pode o quê é decidido no banco (RLS e funções em supabase/admin.sql); aqui só escondemos o que a pessoa não pode usar.
-import { CATEGORIAS, urlImagemEvento } from './backend.js';
+import { CATEGORIAS, urlImagemEvento, imagemDoSite } from './backend.js';
 import { comprimir } from './imagem.js';
 import { ligarSugestoes } from './sugestoes.js';
 
@@ -126,7 +126,7 @@ app.addEventListener('click', async e => {
   if (await confirmar(`Excluir "${ev.titulo}"? Isso apaga também as fotos, recados e confirmações do evento. Não dá para desfazer.`)) {
     const { error } = await sb.from('eventos').delete().eq('id', ev.id);
     if (error) return falha(error);
-    if (ev.imagem) await sb.storage.from('eventos').remove([ev.imagem]);
+    if (ev.imagem && !imagemDoSite(ev.imagem)) await sb.storage.from('eventos').remove([ev.imagem]);
     eventos = eventos.filter(x => x.id !== ev.id); listarEventos(); toast('Evento excluído.');
   }
 });
@@ -159,7 +159,7 @@ function editarEvento(ev) {
     const q = ev ? sb.from('eventos').update(dados).eq('id', ev.id) : sb.from('eventos').insert(dados);
     const { error } = await q;
     if (error) { if (nova) await sb.storage.from('eventos').remove([nova]); f.querySelector('.erro').textContent = traduzir(error); return; }
-    if (ev?.imagem && 'imagem' in dados) await sb.storage.from('eventos').remove([ev.imagem]); // a antiga não fica sobrando
+    if (ev?.imagem && !imagemDoSite(ev.imagem) && 'imagem' in dados) await sb.storage.from('eventos').remove([ev.imagem]); // a antiga não fica sobrando
     d.close(); toast(ev ? 'Evento atualizado.' : 'Evento criado.'); abaAgenda();
   };
   d.showModal();

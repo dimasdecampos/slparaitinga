@@ -19,8 +19,15 @@ export function acontecendo(ev, agora = Date.now()) {
 }
 
 // Endereço público da imagem de capa (bucket "eventos").
-export const urlImagemEvento = (caminho, cfg = window.AGENDA_CONFIG || {}) =>
-  caminho && cfg.supabaseUrl ? `${cfg.supabaseUrl}/storage/v1/object/public/eventos/${caminho.split('/').map(encodeURIComponent).join('/')}` : null;
+// Imagens de evento ficam no armazenamento do Supabase (pasta do autor). As cadastradas pela equipe direto no banco usam
+// o prefixo 00000000-0000-0000-0000-000000000000/ e ficam hospedadas no próprio site, em img/eventos/.
+export const PREFIXO_SITE = '00000000-0000-0000-0000-000000000000/';
+export const imagemDoSite = caminho => !!caminho && caminho.startsWith(PREFIXO_SITE);
+export const urlImagemEvento = (caminho, cfg = window.AGENDA_CONFIG || {}) => {
+  if (!caminho) return null;
+  if (imagemDoSite(caminho)) return new URL('img/eventos/' + encodeURIComponent(caminho.slice(PREFIXO_SITE.length)), import.meta.url).href;
+  return cfg.supabaseUrl ? `${cfg.supabaseUrl}/storage/v1/object/public/eventos/${caminho.split('/').map(encodeURIComponent).join('/')}` : null;
+};
 const comImagem = (e, cfg) => ({ ...e, imagem_url: e.imagem_url || urlImagemEvento(e.imagem, cfg) });
 
 export async function criarBackend() {
