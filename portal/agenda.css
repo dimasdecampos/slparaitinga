@@ -144,7 +144,8 @@
 .dia-num.hoje { background: var(--vivo); color: #fff; }
 .dia-cab strong { display: block; font-size: 1.1rem; line-height: 1.2; }
 .dia-cab small { color: var(--suave); font-size: .85rem; }
-.ev-card { display: grid; grid-template-columns: 58px 1fr; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 12px; background: #f3f0ea; background: color-mix(in srgb, var(--c) 9%, #fff); border-left: 4px solid var(--c); }
+/* cartão do dia em lista compacta: foto pequena à esquerda, texto ao lado, descrição fechada */
+.ev-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px 12px 10px 12px; border-radius: 12px; background: #f3f0ea; background: color-mix(in srgb, var(--c) 9%, #fff); border-left: 4px solid var(--c); }
 .ev-hora { font-family: var(--serif); font-weight: 700; font-size: 1.02rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .ev-hora.todo, .evento-linha .hora.todo { font-size: .88rem; }
 .ev-hora small { display: block; font-family: var(--sans); font-weight: 400; font-size: .74rem; color: var(--suave); margin-top: 2px; }
@@ -154,6 +155,20 @@
 .ev-corpo .onde { font-size: .88rem; color: var(--suave); }
 .ev-corpo p { margin: 4px 0 0; font-size: .88rem; overflow-wrap: anywhere; }
 .ev-corpo .por { font-size: .76rem; color: var(--suave); margin-top: 4px; }
+.ev-card.com-foto { grid-template-columns: 56px minmax(0, 1fr); }
+.ev-mini { all: unset; cursor: zoom-in; display: block; width: 56px; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 8px; background: var(--linha); box-shadow: 0 0 0 1px var(--linha); }
+.ev-mini:focus-visible { outline: 3px solid var(--telha); outline-offset: 2px; }
+.ev-mini img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.ev-corpo .selos { align-items: center; }
+.ev-quando { font-size: .82rem; color: var(--suave); font-variant-numeric: tabular-nums; }
+.ev-quando b { color: var(--tinta); font-family: var(--serif); font-size: .95rem; }
+.ev-detalhes { margin-top: 4px; }
+.ev-detalhes summary { cursor: pointer; width: fit-content; font-size: .84rem; font-weight: 700; color: var(--azul); list-style: none; }
+.ev-detalhes summary::-webkit-details-marker { display: none; }
+.ev-detalhes summary::after { content: " ▾"; }
+.ev-detalhes[open] summary::after { content: " ▴"; }
+.ev-detalhes summary:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; border-radius: 4px; }
+.ev-detalhes p { margin: 6px 0 0; white-space: pre-wrap; }
 .selo.ao-vivo { background: #e9f8ef; color: var(--vivo-verde-texto); }
 .dia-vazio { margin: 0; color: var(--suave); }
 .cal-dia .botao-primario { align-self: flex-start; }
@@ -171,7 +186,6 @@
   .chips { display: none; }
   .pontos { display: flex; gap: 3px; min-height: 7px; }
   .cal-semana span { font-size: .66rem; letter-spacing: 0; }
-  .ev-card { grid-template-columns: 52px 1fr; }
 }
 
 .como-funciona { margin-top: 40px; background: var(--cartao); border-radius: 14px; padding: 18px 22px; box-shadow: var(--sombra); }

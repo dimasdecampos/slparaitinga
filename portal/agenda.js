@@ -249,13 +249,14 @@ function renderDia() {
   const agora = Date.now();
   $('#cal-dia').innerHTML = `<div class="dia-cab"><span class="dia-num${diaSel === hojeK ? ' hoje' : ''}">${d.getDate()}</span>
       <div><strong>${maiuscula(d.toLocaleDateString('pt-BR', { weekday: 'long' }))}</strong><small>${rel ? `${rel} · ` : ''}${d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</small></div></div>`
-    + (evs.length ? evs.map(e => `<article class="ev-card" style="--c:${corDe(e.categoria)}">
-        <div class="ev-hora${diaTodo(e) ? ' todo' : ''}">${faixa(e)[0]}<small>${faixa(e)[1]}</small></div>
-        <div class="ev-corpo"><div class="selos"><span class="selo">${esc(e.categoria)}</span>${acontecendo(e, agora) ? '<span class="selo ao-vivo">acontecendo agora</span>' : ''}</div>
+    // Lista compacta: foto pequena à esquerda; ao lado, horário e tipo, título, subtítulo e local. A descrição fica fechada.
+    // "Adicionado por" não aparece, mas continua guardado no cartão (data-autor) e no banco.
+    + (evs.length ? evs.map(e => { const [h1, h2] = faixa(e); return `<article class="ev-card${e.imagem_url ? ' com-foto' : ''}" style="--c:${corDe(e.categoria)}" data-evento="${e.id}" data-autor="${esc(e.autor || '')}">
+      ${e.imagem_url ? `<button type="button" class="ev-mini" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
+        <div class="ev-corpo"><div class="selos"><span class="ev-quando"><b>${esc(h1)}</b>${h2 ? ` ${esc(h2)}` : ''}</span><span class="selo">${esc(e.categoria)}</span>${acontecendo(e, agora) ? '<span class="selo ao-vivo">acontecendo agora</span>' : ''}</div>
           <strong>${esc(e.titulo)}</strong>${e.subtitulo ? `<span class="subtitulo">${esc(e.subtitulo)}</span>` : ''}<span class="onde">📍 ${esc(e.local)}</span>
-          ${e.descricao ? `<p>${esc(e.descricao)}</p>` : ''}<span class="por">Adicionado por ${esc(e.autor)}</span></div>
-      ${e.imagem_url ? `<button type="button" class="ev-capa" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
-      </article>`).join('') : `<p class="dia-vazio">${filtro === 'Todos' ? 'Nenhum evento neste dia.' : `Nenhum evento de “${esc(filtro)}” neste dia.`}</p>`)
+          ${e.descricao ? `<details class="ev-detalhes"><summary>Ver descrição</summary><p>${esc(e.descricao)}</p></details>` : ''}</div>
+      </article>`; }).join('') : `<p class="dia-vazio">${filtro === 'Todos' ? 'Nenhum evento neste dia.' : `Nenhum evento de “${esc(filtro)}” neste dia.`}</p>`)
     + (diaSel >= hojeK ? `<button type="button" class="botao-primario" data-acao="novo-dia">+ Adicionar neste dia</button>` : '');
 }
 function renderLista(vivosIds) {

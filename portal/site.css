@@ -90,6 +90,10 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .mapa { position: absolute; inset: 0; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
 .mapa.arrastando { cursor: grabbing; }
 .mapa svg { width: 100%; height: 100%; display: block; }
+/* sem a borda preta do navegador ao clicar nos pinos e balões; quem navega pelo teclado vê um contorno branco no lugar */
+.mapa svg :focus, .mapa svg :focus-visible, .mapa:focus, .mapa:focus-visible { outline: none; }
+.vivo-marca:focus-visible .balao rect { stroke: #fff; stroke-width: 3; }
+.pino:focus-visible circle { stroke-width: 6; }
 .pino { cursor: pointer; }
 .pino circle { fill: #fff; stroke: var(--cor, var(--suave)); stroke-width: 3.5; transition: r .15s; }
 .pino:hover circle, .pino.sel circle { r: 8; fill: var(--cor); }
