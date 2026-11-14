@@ -135,6 +135,10 @@ function render() {
   const agora = Date.now();
   const vivos = eventos.filter(e => !encerrado(e) && (acontecendo(e, agora) || (janelaAberta(e, agora) && new Date(e.inicio) <= agora)));
   const vivosIds = new Set(vivos.map(e => e.id));
+  // Bolinha do título: verde e pulsando = tem evento acontecendo; amarela e parada = tem evento hoje, mas nada agora; vermelha = nada hoje.
+  const hoje0 = new Date(); hoje0.setHours(0, 0, 0, 0); const amanha0 = new Date(hoje0.getTime() + 864e5);
+  const temHoje = eventos.some(e => new Date(e.inicio) < amanha0 && new Date(e.fim) > hoje0);
+  $('#ponto-agora').dataset.estado = vivos.length ? 'vivo' : temHoje ? 'hoje' : 'nada';
   const u = api.usuario();
 
   const estado = guardarEstadoMural();
