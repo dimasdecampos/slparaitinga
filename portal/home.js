@@ -185,12 +185,6 @@ const quandoLongo = e => {
   const mesmo = ini.toDateString() === fim.toDateString();
   return `${maiuscula(dia)} · ${hora(ini)} ${mesmo ? 'às ' + hora(fim) : 'até ' + fim.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) + ' ' + hora(fim)}`;
 };
-const linkAgenda = e => {
-  const f = d => d.toISOString().replace(/[-:]|.d{3}/g, '');
-  const ini = new Date(e.inicio), fim = new Date(e.fim);
-  const datas = diaTodo(e) ? `${ini.toLocaleDateString('sv').replace(/-/g, '')}/${new Date(+fim + 864e5).toLocaleDateString('sv').replace(/-/g, '')}` : `${f(ini)}/${f(fim)}`;
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(e.titulo + (e.subtitulo ? ' – ' + e.subtitulo : '')) + '&dates=' + datas + '&location=' + encodeURIComponent(e.local + ', São Luiz do Paraitinga') + '&details=' + encodeURIComponent((e.descricao || '').slice(0, 900));
-};
 function abrirModal(html, imagem) {
   $('#card-modal').classList.toggle('sem-imagem', !imagem);
   corpoCard.innerHTML = (imagem ? `<div class="card-img"><img src="${esc(imagem)}" alt=""></div>` : '') + `<div class="card-texto">${html}</div>`;
@@ -202,7 +196,7 @@ function cardEvento(e) {
   abrirModal(`<div class="card-selos"><span class="selo" style="color:${COR_CAT[e.categoria] || COR_CAT.Outros}">${esc(e.categoria)}</span>${estado}</div>
     <h2 id="card-titulo">${esc(e.titulo)}</h2>${e.subtitulo ? `<p class="card-sub">${esc(e.subtitulo)}</p>` : ''}
     <ul class="card-info"><li><span>${ICONE_CAL}</span><div>${esc(quandoLongo(e))}</div></li><li><span>${ICONE_PINO}</span><div>${esc(e.local)}</div></li></ul>
-    <div class="card-acoes">${p && mapa ? '<button type="button" class="btn btn-sec" data-card-mapa>Ver no mapa</button>' : ''}<a class="btn btn-sec" href="${esc(linkAgenda(e))}" target="_blank" rel="noopener">Adicionar ao meu calendário</a><a class="btn" href="agenda.html">Ver na agenda</a></div>
+    <div class="card-acoes">${p && mapa ? '<button type="button" class="btn btn-sec" data-card-mapa>Ver no mapa</button>' : ''}<a class="btn" href="agenda.html">Ver na agenda</a></div>
     ${e.descricao ? `<div class="card-desc">${esc(e.descricao)}</div>` : ''}
     ${e.autor ? `<p class="card-autor">Adicionado por ${esc(e.autor)}</p>` : ''}`, e.imagem_url);
   const bt = corpoCard.querySelector('[data-card-mapa]');
