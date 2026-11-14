@@ -158,3 +158,5 @@
 .previa-texto { position: absolute; left: 14px; right: 14px; bottom: 12px; z-index: 1; color: #fff; display: grid; }
 .previa-texto b { font-size: 1.3rem; line-height: 1.1; }
 .previa-texto small { opacity: .8; font-size: .75rem; }
+.aviso-foto { margin: 0; padding: 8px 12px; border-radius: 10px; background: #fff8e1; border: 1px solid #f3dc9a; color: #6b4e00; font-size: .84rem; line-height: 1.4; }
+.aviso-foto[hidden] { display: none; }

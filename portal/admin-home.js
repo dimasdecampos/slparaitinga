@@ -5,10 +5,13 @@ import { comprimir } from './imagem.js';
 
 const ESPACOS = [
   { chave: 'capa', nome: 'Capa da página inicial', dica: 'A foto grande do topo, atrás do nome da cidade. Prefira uma foto deitada (horizontal), com o assunto no meio e a parte de baixo mais simples, porque o texto fica por cima dela.', proporcao: '4 / 3' },
-  { chave: 'lugares', nome: 'Cartão “Lugares”', dica: 'Em “Conheça a cidade”. Uma praça, igreja ou o rio.', proporcao: '16 / 9' },
-  { chave: 'historia', nome: 'Cartão “História”', dica: 'Em “Conheça a cidade”. O casario, a Matriz ou uma foto antiga.', proporcao: '16 / 9' },
-  { chave: 'servicos', nome: 'Cartão “Serviços”', dica: 'Em “Conheça a cidade”. A Prefeitura, o Mercado ou uma rua do centro.', proporcao: '16 / 9' },
+  { chave: 'lugares', nome: 'Cartão “Lugares”', dica: 'Em “Conheça a cidade” e também no topo da página Lugares. Uma praça, igreja ou o rio.', proporcao: '16 / 9', minimo: 1400 },
+  { chave: 'historia', nome: 'Cartão “História”', dica: 'Em “Conheça a cidade” e também no topo da página História. O casario, a Matriz ou uma foto antiga.', proporcao: '16 / 9', minimo: 1400 },
+  { chave: 'servicos', nome: 'Cartão “Serviços”', dica: 'Em “Conheça a cidade” e também no topo da página Serviços. A Prefeitura, o Mercado ou uma rua do centro.', proporcao: '16 / 9', minimo: 1400 },
 ];
+ESPACOS[0].minimo = 1600; // a capa ocupa mais tela, então pede foto maior
+// Lê só as dimensões da foto escolhida, para avisar quando ela é pequena demais (vai ficar borrada em celular e telas nítidas).
+const dimensoes = arq => new Promise(res => { const u = URL.createObjectURL(arq), i = new Image(); i.onload = () => { res([i.naturalWidth, i.naturalHeight]); URL.revokeObjectURL(u); }; i.onerror = () => { res(null); URL.revokeObjectURL(u); }; i.src = u; });
 
 export function criarHome({ app, sb, esc, toast, falha, confirmar, traduzir, cfg, actionsUrl, usuario }) {
   const url = caminho => (caminho ? `${cfg.supabaseUrl}/storage/v1/object/public/site/${caminho.split('/').map(encodeURIComponent).join('/')}` : null);
@@ -33,6 +36,7 @@ export function criarHome({ app, sb, esc, toast, falha, confirmar, traduzir, cfg
         <h3>${esc(e.nome)}</h3><small class="ed-dica">${esc(e.dica)}</small>
         <div class="espaco-previa${e.chave === 'capa' ? ' previa-capa' : ''}" style="aspect-ratio:${e.proporcao};--chita:url(../img/chita-${e.chave === 'lugares' ? 'azul' : e.chave === 'historia' ? 'amarela' : 'vermelha'}.svg)">${a.imagem ? `<img src="${esc(url(a.imagem))}" alt="">` : ''}${e.chave === 'capa' ? '<span class="previa-texto"><b>São Luiz do Paraitinga</b><small>o texto da capa fica aqui</small></span>' : ''}</div>
         <label class="botao-sec ed-enviar">Escolher foto<input type="file" name="arquivo" accept="image/jpeg,image/png,image/webp" hidden></label>
+        <p class="aviso-foto" role="status" hidden></p>
         <label>Descrição da foto<small class="ed-dica">O que aparece nela, e o crédito do fotógrafo se houver. Ajuda quem usa leitor de tela.</small><input name="legenda" maxlength="160" value="${esc(a.legenda || '')}" placeholder="Ex.: Casario colorido da Praça Dr. Oswaldo Cruz. Foto: Fulano"></label>
         <div class="acoes-linha">${a.imagem ? '<button type="button" class="botao-sec perigo" data-remover>Remover foto</button>' : ''}<button class="btn" disabled>Salvar</button></div>
       </form>`;
@@ -42,10 +46,14 @@ export function criarHome({ app, sb, esc, toast, falha, confirmar, traduzir, cfg
       const chave = f.dataset.chave, atual = atuais[chave] || {}, salvar = f.querySelector('button.btn');
       let nova = null;
       f.addEventListener('input', () => { salvar.disabled = false; });
-      f.arquivo.addEventListener('change', () => {
+      const aviso = f.querySelector('.aviso-foto'), minimo = ESPACOS.find(x => x.chave === chave).minimo;
+      f.arquivo.addEventListener('change', async () => {
         const arq = f.arquivo.files[0]; if (!arq) return;
         if (!/^image\/(jpeg|png|webp)$/.test(arq.type)) { toast('Use uma foto JPG, PNG ou WebP.', true); f.arquivo.value = ''; return; }
         nova = arq; salvar.disabled = false;
+        const dim = await dimensoes(arq);
+        if (dim && dim[0] < minimo) { aviso.textContent = `Esta foto tem ${dim[0]} × ${dim[1]} px, pequena para este espaço: vai ficar borrada no celular e em telas nítidas. O ideal é ter pelo menos ${minimo} px de largura. Dá para salvar assim, mas vale usar a foto original.`; aviso.hidden = false; }
+        else aviso.hidden = true;
         const box = f.querySelector('.espaco-previa'); let img = box.querySelector('img');
         if (!img) { img = document.createElement('img'); img.alt = ''; box.prepend(img); }
         img.src = URL.createObjectURL(arq);

@@ -73,7 +73,20 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 /* capa: foto enviada pelo painel (aba "Fotos da home"); sem foto, a estampa de chita */
 .hero-capa { grid-area: capa; position: relative; isolation: isolate; display: flex; align-items: flex-end; min-height: 330px; border-radius: 22px; overflow: hidden; color: #fff; background: var(--chita) 0 0 / 210px, var(--telha); box-shadow: var(--sombra); }
 .hero-capa::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(29, 27, 24, .25) 0%, rgba(29, 27, 24, .5) 40%, rgba(29, 27, 24, .9) 100%); }
-.hero-capa.com-foto::after { background: linear-gradient(180deg, rgba(29, 27, 24, 0) 25%, rgba(29, 27, 24, .55) 55%, rgba(29, 27, 24, .9) 100%); }
+/* sobre foto o degradê começa mais alto e mais forte: o texto precisa ler bem até em fotos claras e coloridas */
+.hero-capa.com-foto::after { background: linear-gradient(180deg, rgba(29, 27, 24, .35) 0%, rgba(29, 27, 24, .2) 18%, rgba(29, 27, 24, .62) 48%, rgba(29, 27, 24, .93) 100%); }
+.hero-capa.com-foto .hero-texto { text-shadow: 0 1px 10px rgba(0, 0, 0, .55); }
+.hero-capa.com-foto .olho { color: #ffe08a; }
+.hero-capa.com-foto .btn { text-shadow: none; }
+
+/* cabeçalho das páginas internas com foto (cadastrada no painel) */
+.pagina-topo.com-foto { position: relative; isolation: isolate; color: #fff; border-bottom: 0; padding-block: 64px 44px; background: var(--tinta); }
+.pagina-topo.com-foto::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(29, 27, 24, .45), rgba(29, 27, 24, .86)); }
+.topo-foto { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.pagina-topo.com-foto .olho { color: #ffe08a; }
+.pagina-topo.com-foto .lema { color: rgba(255, 255, 255, .9); }
+.pagina-topo.com-foto h1, .pagina-topo.com-foto .lema, .pagina-topo.com-foto .olho { text-shadow: 0 1px 10px rgba(0, 0, 0, .5); }
+@media (max-width: 760px) { .pagina-topo.com-foto { padding-block: 44px 30px; } }
 .hero-foto { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
 .hero-texto { padding: 26px 26px 24px; }
 .hero-texto .olho { color: var(--ouro); }

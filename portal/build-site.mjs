@@ -167,7 +167,11 @@ ${scripts}
 `;
 }
 
-const cabecalhoPagina = (olho, h1, texto) => `<header class="pagina-topo"><div class="larg"><p class="olho">${olho}</p><h1>${h1}</h1><p class="lema">${texto}</p></div></header>`;
+// Cabeçalho das páginas internas. Com `chave`, usa a foto cadastrada no painel (aba "Fotos da home") como faixa de fundo; sem foto, fica como antes.
+const cabecalhoPagina = (olho, h1, texto, chave) => {
+  const foto = chave && IMAGENS[chave] ? fotoSite(chave, { classe: 'topo-foto', sizes: '100vw', prioridade: true }).replace(/ alt="[^"]*"/, ' alt=""') : '';
+  return `<header class="pagina-topo${foto ? ' com-foto' : ''}">${foto}<div class="larg"><p class="olho">${olho}</p><h1>${h1}</h1><p class="lema">${texto}</p></div></header>`;
+};
 const TIPOS = { praca: 'Praças e natureza', igreja: 'Igrejas', cultura: 'Cultura', servico: 'Serviços' };
 const lugarLD = { '@type': 'Place', name: 'São Luiz do Paraitinga', address: { '@type': 'PostalAddress', addressLocality: 'São Luiz do Paraitinga', addressRegion: 'SP', addressCountry: 'BR' } };
 
@@ -224,7 +228,7 @@ paginas.push({
       <div class="hero-texto">
         <p class="olho">Vale do Paraíba · São Paulo</p>
         <h1 id="titulo">São Luiz do Paraitinga</h1>
-        <p class="lema">Festas, tradição e o que está acontecendo agora na cidade, ao vivo no mapa.</p>
+        <p class="lema">Veja o que está rolando hoje, as próximas festas e tudo que vem por aí na cidade.</p>
         <div class="painel-acoes"><a class="btn btn-claro" href="agenda.html">Ver a agenda</a><a class="btn btn-vidro" href="agenda.html#novo">Avisar um evento</a></div>
       </div>
     </div>
@@ -371,7 +375,7 @@ paginas.push({
   titulo: 'Lugares para conhecer: praças, igrejas e o Rio Paraitinga',
   descricao: 'Praça Dr. Oswaldo Cruz, Igreja Matriz, Capela das Mercês, Casa de Oswaldo Cruz e outros lugares de São Luiz do Paraitinga, com localização no mapa.',
   jsonld: [{ '@context': 'https://schema.org', '@type': 'ItemList', name: 'Lugares de São Luiz do Paraitinga', itemListElement: pontos.map((p, i) => ({ '@type': 'ListItem', position: i + 1, item: { '@type': p.tipo === 'igreja' ? 'Church' : p.tipo === 'servico' ? 'CivicStructure' : 'TouristAttraction', name: p.nome, ...(p.texto ? { description: p.texto } : {}), address: lugarLD.address } })) }],
-  corpo: `${cabecalhoPagina('Guia da cidade', 'Lugares', 'O centro histórico cabe numa caminhada. Estes são os pontos de referência de quem mora e de quem visita.')}
+  corpo: `${cabecalhoPagina('Guia da cidade', 'Lugares', 'O centro histórico cabe numa caminhada. Estes são os pontos de referência de quem mora e de quem visita.', 'lugares')}
 ${Object.entries(TIPOS).filter(([t]) => pontos.some(p => p.tipo === t)).map(([t, nome]) => `<section class="secao larg" aria-labelledby="t-${t}">
   <div class="secao-topo"><h2 id="t-${t}">${nome}</h2></div>
   <ul class="lugares">
@@ -384,7 +388,7 @@ paginas.push({
   arquivo: 'historia.html', migalha: 'História',
   titulo: 'História: da fundação em 1769 à reconstrução depois da enchente',
   descricao: 'A história de São Luiz do Paraitinga: a fundação em 1769, o nascimento de Oswaldo Cruz, a enchente de 2010 e a reconstrução do centro histórico.',
-  corpo: `${cabecalhoPagina('Nossa história', 'Um pouco de história', 'Uma cidade que nasceu à beira do rio, e que aprendeu a recomeçar com ele.')}
+  corpo: `${cabecalhoPagina('Nossa história', 'Um pouco de história', 'Uma cidade que nasceu à beira do rio, e que aprendeu a recomeçar com ele.', 'historia')}
 <section class="secao larg estreita">
   <ol class="linha-tempo">
     <li><span class="ano">1769</span><div><h2>A vila à beira do rio</h2><p>São Luiz do Paraitinga é fundada às margens do Rio Paraitinga, no caminho entre o Vale do Paraíba e o litoral.</p></div></li>
@@ -401,7 +405,7 @@ paginas.push({
   arquivo: 'servicos.html', migalha: 'Serviços',
   titulo: 'Serviços: telefones úteis, previsão do tempo e avisos da Prefeitura',
   descricao: 'Telefones úteis de São Luiz do Paraitinga, previsão do tempo para a semana e os avisos mais recentes da Prefeitura: concursos, educação, cultura e saúde.',
-  corpo: `${cabecalhoPagina('Para o dia a dia', 'Serviços', 'Telefones, previsão do tempo e o que a Prefeitura publicou de útil para o morador.')}
+  corpo: `${cabecalhoPagina('Para o dia a dia', 'Serviços', 'Telefones, previsão do tempo e o que a Prefeitura publicou de útil para o morador.', 'servicos')}
 <section class="secao larg" aria-labelledby="t-tel">
   <div class="secao-topo"><h2 id="t-tel">Telefones úteis</h2></div>
   <ul class="telefones">
