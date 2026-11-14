@@ -101,7 +101,6 @@ function renderProximos() {
   $('#proximos').innerHTML = prox.length ? prox.map(e => {
     const d = new Date(e.inicio);
     return `<li><a class="cartao-ev" href="agenda.html" style="--c:${COR_CAT[e.categoria] || COR_CAT.Outros}">
-      ${e.descricao ? `<p class="cartao-ev-desc"><span>${esc(e.descricao)}</span></p>` : ''}
       <div class="cartao-ev-capa">${e.imagem_url ? `<img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async">` : '<span class="sem-imagem" aria-hidden="true"></span>'}
         <span class="cartao-ev-data"><b>${d.getDate()}</b>${MESES[d.getMonth()]}</span></div>
       <div class="cartao-ev-corpo"><span class="selo">${esc(e.categoria)}</span><strong>${esc(e.titulo)}</strong>

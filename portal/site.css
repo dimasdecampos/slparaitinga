@@ -312,5 +312,3 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .cartao-ev-corpo span:not(.selo) { font-size: .85rem; color: var(--suave); }
 .festa-faixa { min-height: 150px; max-width: none; }
 @media (min-width: 720px) { .festa-faixa { min-height: 170px; } }
-.cartao-ev-desc { margin: 0; padding: 12px 14px; min-height: calc(3 * 1.4em + 24px); }
-.cartao-ev-desc span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: .88rem; line-height: 1.4; color: var(--tinta); }
