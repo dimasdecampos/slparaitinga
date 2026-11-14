@@ -17,6 +17,8 @@
 @media (prefers-reduced-motion: reduce) { .ponto-vivo { animation: none; } }
 .ponto-vivo[data-estado="hoje"] { background: var(--ouro); animation: none; box-shadow: none; }
 .ponto-vivo[data-estado="nada"] { background: var(--vivo); animation: none; box-shadow: none; }
+.ponto-vivo[data-estado="carregando"] { background: #c9c3b8; animation: none; box-shadow: none; } /* antes de saber se há algo ao vivo: não diz nada */
+#t-agora-txt { transition: color .2s; }
 .lista-agora { display: flex; flex-direction: column; gap: 16px; }
 .vivo { background: var(--cartao); border-radius: 18px; box-shadow: var(--sombra); border: 1px solid var(--linha); padding: 18px 20px 12px; }
 .vivo h3 { all: unset; display: block; font-family: var(--serif); font-size: 1.35rem; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }

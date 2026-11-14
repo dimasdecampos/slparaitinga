@@ -118,7 +118,10 @@ async function carregar() {
     const [regs] = await Promise.all([api.listarRegistros(ids), buscarRecados(ids)]);
     registros = regs.filter(r => deHoje(r.criado_em)); // as fotos duram só o dia
     render();
-  } catch (err) { console.error(err); toast(err.message || 'Erro ao carregar a agenda.'); }
+  } catch (err) {
+    console.error(err); toast(err.message || 'Erro ao carregar a agenda.');
+    if (!eventos.length) $('#t-agora-txt').textContent = 'Não foi possível carregar a agenda agora'; // não deixa "Carregando…" para sempre
+  }
 }
 const deHoje = iso => chave(new Date(iso)) === chave(new Date());
 
