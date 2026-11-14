@@ -295,13 +295,13 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .carrossel { list-style: none; margin: 0; padding: 4px 2px 14px; display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; overscroll-behavior-x: contain; scrollbar-width: none; }
 .carrossel::-webkit-scrollbar { display: none; }
 .carrossel:focus-visible { outline: 3px solid var(--telha); outline-offset: 2px; border-radius: 12px; }
-.carrossel > li { flex: 0 0 min(300px, 78vw); scroll-snap-align: start; }
+.carrossel > li { flex: 0 0 min(232px, 66vw); scroll-snap-align: start; }
 .carrossel-vazio { flex: 1 1 auto !important; color: var(--suave); }
 .cartao-ev { display: flex; flex-direction: column; height: 100%; background: var(--cartao); border-radius: var(--raio); overflow: hidden; box-shadow: var(--sombra); text-decoration: none; transition: transform .15s; }
 .cartao-ev:hover { transform: translateY(-3px); }
 .cartao-ev:focus-visible { outline: 3px solid var(--telha); outline-offset: 2px; }
-.cartao-ev-capa { position: relative; aspect-ratio: 16 / 9; background: var(--linha); }
-.cartao-ev-capa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cartao-ev-capa { position: relative; aspect-ratio: 4 / 5; background: var(--linha); }
+.cartao-ev-capa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
 .cartao-ev-capa .sem-imagem { position: absolute; inset: 0; background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 55%, #1d1b18)); }
 .cartao-ev-capa .sem-imagem::after { content: ""; position: absolute; inset: 0; background: url(img/faixa-flores.svg) 0 100% / auto 14px repeat-x; opacity: .9; }
 .cartao-ev-data { position: absolute; left: 10px; top: 10px; display: flex; flex-direction: column; align-items: center; min-width: 46px; padding: 5px 8px; border-radius: 10px; background: #fff; color: var(--tinta); font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; line-height: 1.1; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
@@ -312,3 +312,10 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 800; line-height: 1.12; mar
 .cartao-ev-corpo span:not(.selo) { font-size: .85rem; color: var(--suave); }
 .festa-faixa { min-height: 150px; max-width: none; }
 @media (min-width: 720px) { .festa-faixa { min-height: 170px; } }
+
+/* carrossel de festas (home): cartões como os dos eventos, com a estampa de chita no lugar da imagem */
+.cartao-festa .cartao-ev-capa { background: var(--chita) 0 0 / 150px; }
+.cartao-festa .festa-estampa { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(29, 27, 24, 0) 45%, rgba(29, 27, 24, .55)); }
+.cartao-festa .cartao-ev-corpo .selo { color: var(--telha); }
+.festa-contagem { position: absolute; left: 10px; right: 10px; bottom: 10px; width: fit-content; max-width: calc(100% - 20px); padding: 4px 11px; border-radius: 999px; background: #fff; color: var(--tinta) !important; font-size: .78rem !important; font-weight: 800; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
+.festa-contagem:empty { display: none; }

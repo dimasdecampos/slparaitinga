@@ -138,6 +138,11 @@ const avisoHTML = n => `<li><a href="${esc(n.link)}" target="_blank" rel="noopen
 
 // ---------- páginas ----------
 const paginas = [];
+const SETA_ESQ = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const SETA_DIR = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const MESES_ABREV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+// Festas na home: as que têm data, da mais próxima para a mais distante, e depois as de data livre.
+const festasHome = [...FESTAS.filter(f => f.ini), ...FESTAS.filter(f => !f.ini)].slice(0, 8);
 // Dicas de carregamento: a agenda fala com o Supabase, então já abrimos a conexão e baixamos o módulo cedo.
 const dicasAgenda = (extra = '') => (SUPABASE ? `<link rel="preconnect" href="${SUPABASE}" crossorigin>` : '') + '<link rel="modulepreload" href="backend.js">' + extra;
 
@@ -170,13 +175,16 @@ paginas.push({
 
 <section class="secao larg" aria-labelledby="t-prox">
   <div class="secao-topo"><h2 id="t-prox">Próximos eventos</h2>
-    <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Eventos anteriores" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximos eventos" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><a class="link-seta" href="agenda.html">Ver calendário</a></div></div>
+    <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Eventos anteriores" hidden>${SETA_ESQ}</button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximos eventos" hidden>${SETA_DIR}</button><a class="link-seta" href="agenda.html">Ver calendário</a></div></div>
   <ul id="proximos" class="carrossel" tabindex="0" aria-label="Próximos eventos (role para o lado)"><li class="carregando">Carregando…</li></ul>
 </section>
 
 <section class="secao larg" aria-labelledby="t-festa">
-  <div class="secao-topo"><h2 id="t-festa">Próxima festa</h2><a class="link-seta" href="festas.html">Todas as festas</a></div>
-  <a class="explore-card destaque festa-faixa" href="${proximaFesta.pagina || 'festas.html'}" style="--chita:url(img/chita-${proximaFesta.chita}.svg)"><strong>${esc(proximaFesta.nome)}</strong><span>${esc(proximaFesta.quando)}</span><span class="contagem" data-contagem="${proximaFesta.ini}" data-fim="${proximaFesta.fim}"></span></a>
+  <div class="secao-topo"><h2 id="t-festa">Próximas festas</h2>
+    <div class="carrossel-ctrl"><button type="button" class="icone-btn" data-carrossel="-1" aria-label="Festas anteriores" hidden>${SETA_ESQ}</button><button type="button" class="icone-btn" data-carrossel="1" aria-label="Próximas festas" hidden>${SETA_DIR}</button><a class="link-seta" href="festas.html">Todas as festas</a></div></div>
+  <ul class="carrossel carrossel-festas" tabindex="0" aria-label="Próximas festas (role para o lado)">
+    ${festasHome.map(f => `<li><a class="cartao-ev cartao-festa" href="${f.pagina}"><div class="cartao-ev-capa" style="--chita:url(img/chita-${f.chita}.svg)"><span class="festa-estampa" aria-hidden="true"></span>${f.ini ? `<span class="cartao-ev-data"><b>${Number(f.ini.slice(8, 10))}</b>${MESES_ABREV[Number(f.ini.slice(5, 7)) - 1]}</span>` : ''}${f.ini ? `<span class="contagem festa-contagem" data-contagem="${f.ini}" data-fim="${f.fim}"></span>` : ''}</div><div class="cartao-ev-corpo"><span class="selo">Festa</span><strong>${esc(f.nome)}</strong><span>${esc(f.quando)}</span></div></a></li>`).join('')}
+  </ul>
 </section>
 
 <section class="secao larg" aria-labelledby="t-explore">

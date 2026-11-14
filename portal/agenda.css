@@ -218,9 +218,24 @@
 .sug-lista li { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-weight: 400; font-size: .95rem; min-height: 44px; display: flex; align-items: center; }
 .sug-lista li:hover, .sug-lista li[aria-selected="true"] { background: var(--papel); }
 
-/* imagem do evento */
-.ev-capa { grid-column: 1 / -1; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; background: var(--linha); }
-.evento-linha .ev-capa { max-height: 220px; }
-.vivo-capa { display: block; width: calc(100% + 40px); margin: -18px -20px 14px; aspect-ratio: 16 / 7; object-fit: cover; border-radius: 18px 18px 0 0; background: var(--linha); }
+/* imagem do evento: cartaz vertical (4:5, formato do Instagram), sempre mostrado sem cortar o texto */
+.capa-btn, .ev-capa { all: unset; cursor: zoom-in; display: block; overflow: hidden; border-radius: 10px; background: var(--linha); box-shadow: 0 0 0 1px var(--linha); }
+.capa-btn:focus-visible, .ev-capa:focus-visible { outline: 3px solid var(--telha); outline-offset: 2px; }
+.capa-btn img, .ev-capa img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; transition: transform .25s ease; }
+.capa-btn:hover img, .ev-capa:hover img { transform: scale(1.04); }
+.capa-btn { aspect-ratio: 4 / 5; }
+.ev-capa { aspect-ratio: 4 / 5; width: 132px; grid-column: 2; margin-top: 4px; }
+/* "Ao vivo": cartaz numa coluna ao lado do texto (no celular, menor e com o texto ao lado) */
+.vivo-cab.com-capa { grid-template-columns: 104px minmax(0, 1fr); column-gap: 14px; }
+.vivo-cab.com-capa .galeria { grid-column: 1 / -1; width: auto; }
+@media (min-width: 720px) {
+  .vivo-cab.com-capa { grid-template-columns: 176px minmax(0, 1fr) auto; column-gap: 20px; }
+  .vivo-cab.com-capa .galeria { grid-column: auto; width: 244px; }
+}
 .seletor-capa { min-height: 110px; gap: 6px; padding: 10px; font-weight: 600; font-size: .9rem; }
-.seletor-capa img { border-radius: 8px; max-height: 200px; }
+.seletor-capa img { width: auto; max-width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; background: var(--papel); }
+
+/* celular: selos e botões da barra sem quebrar linha */
+.pill-vivo, .pill-fim { white-space: nowrap; }
+.vivo-selos { flex-wrap: wrap; gap: 4px 10px; }
+@media (max-width: 460px) { .acao { font-size: .86rem; gap: 5px; padding-inline: 4px; white-space: nowrap; } }

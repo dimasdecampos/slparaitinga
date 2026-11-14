@@ -281,7 +281,7 @@ function semear() {
     ev(6, 'a', { titulo: 'Mutirão de limpeza do rio', local: 'Parque Linear Urbano', categoria: 'Comunidade', inicio: dia(5, 8), fim: dia(5, 12) }),
   ];
   // capas de exemplo (na demonstração, para ver o carrossel e os cartões com imagem)
-  eventos[0].imagem_demo = fotoDemo('#b5552f', '#f2c14e', '#2f6f8a'); eventos[3].imagem_demo = fotoDemo('#2f6b4f', '#f5b700', '#c8452c'); eventos[4].imagem_demo = fotoDemo('#6b5ca5', '#e0263d', '#2c5f7c');
+  eventos[0].imagem_demo = cartazDemo('#b5552f', '#f2c14e', 'DANÇA DE FITAS'); eventos[3].imagem_demo = cartazDemo('#2f6b4f', '#f5b700', 'FEIRA DO PRODUTOR'); eventos[4].imagem_demo = cartazDemo('#6b5ca5', '#e0263d', 'RODA DE VIOLA');
   const confirmacoes = ['u-ze', 'u-par', 'u-x1', 'u-x2', 'u-x3'].map((u, i) => ({ evento_id: 1, usuario_id: u, criado_em: rel(-30 + i * 5) }))
     .concat([{ evento_id: 2, usuario_id: 'u-ana', criado_em: rel(-4) }]);
   const registros = [
@@ -299,5 +299,10 @@ function semear() {
 function fotoDemo(...cores) { // ilustração simples de fitas coloridas para a demonstração
   const fitas = cores.map((c, i) => `<path d="M200 40 C ${120 + i * 60} 120, ${60 + i * 110} 180, ${40 + i * 150} 260" stroke="${c}" stroke-width="10" fill="none"/>`).join('');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#e9dfc9"/><rect y="230" width="400" height="70" fill="#a7b77a"/><line x1="200" y1="20" x2="200" y2="270" stroke="#6b4a2b" stroke-width="8"/>${fitas}<circle cx="200" cy="22" r="10" fill="#d9a441"/><text x="200" y="292" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#3b3b3b">foto de exemplo</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+function cartazDemo(fundo, destaque, titulo) { // cartaz vertical 4:5 (formato do Instagram) para a demonstração
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><rect width="400" height="500" fill="${fundo}"/><circle cx="330" cy="90" r="120" fill="${destaque}" opacity=".35"/><circle cx="60" cy="440" r="150" fill="#fff" opacity=".12"/><text x="30" y="330" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="46" fill="#fff">${titulo.split(' ')[0]}</text><text x="30" y="385" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="46" fill="${destaque}">${titulo.split(' ').slice(1).join(' ')}</text><rect x="30" y="420" width="120" height="6" fill="#fff"/><text x="30" y="458" font-family="Arial,sans-serif" font-size="20" fill="#fff">São Luiz do Paraitinga</text></svg>`;
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }

@@ -108,21 +108,26 @@ function renderProximos() {
   }).join('') : '<li class="carrossel-vazio">Nenhum evento adicionado para os próximos dias. <a href="agenda.html#novo">Adicione o primeiro</a>.</li>';
   atualizarSetas();
 }
-// Setas do carrossel (no celular basta arrastar para o lado; as setas aparecem só quando há mais para ver).
-const trilho = $('#proximos');
+// Setas dos carrosséis (no celular basta arrastar para o lado; as setas aparecem só quando há mais para ver).
+const carrosseis = [...document.querySelectorAll('.carrossel-ctrl')].map(ctrl => ({ ctrl, trilho: ctrl.closest('section').querySelector('.carrossel') })).filter(c => c.trilho);
 function atualizarSetas() {
-  const sobra = trilho.scrollWidth - trilho.clientWidth > 4;
-  document.querySelectorAll('[data-carrossel]').forEach(b => {
-    b.hidden = !sobra;
-    b.disabled = b.dataset.carrossel === '-1' ? trilho.scrollLeft < 4 : trilho.scrollLeft > trilho.scrollWidth - trilho.clientWidth - 4;
-  });
+  for (const { ctrl, trilho } of carrosseis) {
+    const sobra = trilho.scrollWidth - trilho.clientWidth > 4;
+    ctrl.querySelectorAll('[data-carrossel]').forEach(b => {
+      b.hidden = !sobra;
+      b.disabled = b.dataset.carrossel === '-1' ? trilho.scrollLeft < 4 : trilho.scrollLeft > trilho.scrollWidth - trilho.clientWidth - 4;
+    });
+  }
 }
-document.querySelectorAll('[data-carrossel]').forEach(b => b.addEventListener('click', () => {
-  const card = trilho.querySelector('li'); const passo = card ? card.getBoundingClientRect().width + 14 : 300;
-  trilho.scrollBy({ left: Number(b.dataset.carrossel) * passo * Math.max(1, Math.floor(trilho.clientWidth / passo)), behavior: semMovimento ? 'auto' : 'smooth' });
-}));
-trilho.addEventListener('scroll', () => requestAnimationFrame(atualizarSetas), { passive: true });
-new ResizeObserver(atualizarSetas).observe(trilho);
+for (const { ctrl, trilho } of carrosseis) {
+  ctrl.querySelectorAll('[data-carrossel]').forEach(b => b.addEventListener('click', () => {
+    const card = trilho.querySelector('li'); const passo = card ? card.getBoundingClientRect().width + 14 : 300;
+    trilho.scrollBy({ left: Number(b.dataset.carrossel) * passo * Math.max(1, Math.floor(trilho.clientWidth / passo)), behavior: semMovimento ? 'auto' : 'smooth' });
+  }));
+  trilho.addEventListener('scroll', () => requestAnimationFrame(atualizarSetas), { passive: true });
+  new ResizeObserver(atualizarSetas).observe(trilho);
+}
+atualizarSetas();
 
 // ---------------- mapa ----------------
 function montarMapa() {

@@ -151,8 +151,9 @@ function render() {
       nFotos ? `${nFotos} ${nFotos === 1 ? 'foto' : 'fotos'}` : '',
       msgs.length ? `${msgs.length} ${msgs.length === 1 ? 'recado' : 'recados'}` : '',
     ].filter(Boolean).join(' · ');
-    return `<article class="vivo" data-id="${e.id}" aria-labelledby="vivo-t-${e.id}">${e.imagem_url ? `<img class="vivo-capa" src="${esc(e.imagem_url)}" alt="" decoding="async">` : ''}
-      <div class="vivo-cab">
+    return `<article class="vivo" data-id="${e.id}" aria-labelledby="vivo-t-${e.id}">
+      <div class="vivo-cab${e.imagem_url ? ' com-capa' : ''}">
+        ${e.imagem_url ? `<button type="button" class="capa-btn" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
         <div class="vivo-info">
           <div class="vivo-selos">${terminou ? '<span class="pill-fim">Terminou há pouco</span>' : '<span class="pill-vivo"><span class="ponto"></span>Ao vivo</span>'}<span class="selo">${esc(e.categoria)}</span></div>
           <h3 id="vivo-t-${e.id}">${esc(e.titulo)}</h3>
@@ -228,11 +229,12 @@ function renderDia() {
   const agora = Date.now();
   $('#cal-dia').innerHTML = `<div class="dia-cab"><span class="dia-num${diaSel === hojeK ? ' hoje' : ''}">${d.getDate()}</span>
       <div><strong>${maiuscula(d.toLocaleDateString('pt-BR', { weekday: 'long' }))}</strong><small>${rel ? `${rel} · ` : ''}${d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</small></div></div>`
-    + (evs.length ? evs.map(e => `<article class="ev-card" style="--c:${corDe(e.categoria)}">${e.imagem_url ? `<img class="ev-capa" src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}
+    + (evs.length ? evs.map(e => `<article class="ev-card" style="--c:${corDe(e.categoria)}">
         <div class="ev-hora${diaTodo(e) ? ' todo' : ''}">${faixa(e)[0]}<small>${faixa(e)[1]}</small></div>
         <div class="ev-corpo"><div class="selos"><span class="selo">${esc(e.categoria)}</span>${acontecendo(e, agora) ? '<span class="selo ao-vivo">acontecendo agora</span>' : ''}</div>
           <strong>${esc(e.titulo)}</strong><span class="onde">📍 ${esc(e.local)}</span>
           ${e.descricao ? `<p>${esc(e.descricao)}</p>` : ''}<span class="por">Adicionado por ${esc(e.autor)}</span></div>
+      ${e.imagem_url ? `<button type="button" class="ev-capa" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
       </article>`).join('') : `<p class="dia-vazio">${filtro === 'Todos' ? 'Nenhum evento neste dia.' : `Nenhum evento de “${esc(filtro)}” neste dia.`}</p>`)
     + (diaSel >= hojeK ? `<button type="button" class="botao-primario" data-acao="novo-dia">+ Adicionar neste dia</button>` : '');
 }
@@ -243,10 +245,11 @@ function renderLista(vivosIds) {
   const grupos = new Map();
   for (const e of vis) { const k = rotuloDia(e.inicio); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(e); }
   $('#proximos').innerHTML = vis.length ? [...grupos].map(([dia, evs]) => `<div class="dia-grupo"><h3>${esc(dia)}</h3>${evs.map(e => `
-      <article class="evento-linha" style="--c:${corDe(e.categoria)}">${e.imagem_url ? `<img class="ev-capa" src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async">` : ''}
+      <article class="evento-linha" style="--c:${corDe(e.categoria)}">
         <div class="hora${diaTodo(e) ? ' todo' : ''}">${faixa(e)[0]}<small>${faixa(e)[1]}</small></div>
         <div><span class="selo">${esc(e.categoria)}</span><strong>${esc(e.titulo)}</strong><span class="onde">📍 ${esc(e.local)}</span>
           ${e.descricao ? `<p>${esc(e.descricao)}</p>` : ''}<span class="por">Adicionado por ${esc(e.autor)}</span></div>
+        ${e.imagem_url ? `<button type="button" class="ev-capa" data-capa="${esc(e.imagem_url)}" data-capa-titulo="${esc(e.titulo)}" aria-label="Ver o cartaz de ${esc(e.titulo)}"><img src="${esc(e.imagem_url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
       </article>`).join('')}</div>`).join('')
     : `<p class="nada-agora">Nenhum evento marcado para os próximos ${DIAS_FRENTE} dias. Seja o primeiro a adicionar!</p>`;
 }
@@ -365,7 +368,11 @@ document.addEventListener('click', async e => {
   }
 });
 document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-acao],[data-cat],[data-ver],[data-denunciar]'); if (!t) return;
+  const t = e.target.closest('[data-acao],[data-cat],[data-ver],[data-denunciar],[data-capa]'); if (!t) return;
+  if (t.dataset.capa) { // cartaz do evento, inteiro e sem recorte
+    $('#foto-grande').src = t.dataset.capa; $('#foto-grande').alt = `Cartaz: ${t.dataset.capaTitulo}`; $('#legenda-grande').textContent = t.dataset.capaTitulo;
+    $('#den-foto').hidden = true; $('#dlg-ver').showModal(); return;
+  }
   if (t.dataset.cat) { filtro = t.dataset.cat; render(); return; }
   if (t.dataset.ver) {
     const r = registros.find(x => String(x.id) === t.dataset.ver); if (!r) return;
@@ -431,7 +438,7 @@ $('#form-evento').addEventListener('submit', async e => {
   if (fim < Date.now()) { erro.textContent = 'Esse horário já passou.'; return; }
   btn.disabled = true;
   try {
-    const arq = f.imagem.files[0], capa = arq ? await comprimir(arq, 1280) : null;
+    const arq = f.imagem.files[0], capa = arq ? await comprimir(arq, 1350) : null;
     await api.criarEvento({ titulo: f.titulo.value.trim(), local: f.local.value.trim(), categoria: f.categoria.value, descricao: f.descricao.value.trim() || null, inicio: inicio.toISOString(), fim: fim.toISOString() }, capa);
     $('#dlg-evento').close(); toast('Evento publicado na agenda!');
     if (visao === 'mes') { diaSel = chave(inicio); mes = primeiroDia(inicio); } // mostra o evento recém-criado no calendário

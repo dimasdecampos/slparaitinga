@@ -152,7 +152,7 @@ function editarEvento(ev) {
     let nova = null;
     if (arq) {
       nova = `${eu.id}/${Date.now()}.jpg`;
-      const up = await sb.storage.from('eventos').upload(nova, await comprimir(arq, 1280), { contentType: 'image/jpeg' });
+      const up = await sb.storage.from('eventos').upload(nova, await comprimir(arq, 1350), { contentType: 'image/jpeg' });
       if (up.error) { f.querySelector('.erro').textContent = traduzir(up.error); return; }
       dados.imagem = nova;
     } else if (f.remover_imagem.checked) dados.imagem = null;
